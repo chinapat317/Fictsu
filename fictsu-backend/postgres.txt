@@ -1,1 +1,41 @@
-docker exec -it fictsu-postgres psql -U postgres
+docker exec -it fictsu-postgres psql -U kwang -d fictsu
+
+GRANT ALL PRIVILEGES ON DATABASE fictsu TO kwang;
+
+CREATE TABLE Fictions (
+    ID          SERIAL PRIMARY KEY,
+    Cover       VARCHAR(255),
+    Title       VARCHAR(255),
+    Subtitle    VARCHAR(255),
+    Author      VARCHAR(255),
+    Artist      VARCHAR(255),
+    Status      VARCHAR(255),
+    Synopsis    TEXT,
+    Genre       VARCHAR(255),
+    Created     DATE DEFAULT CURRENT_DATE
+);
+
+CREATE TABLE CHAPTERS (
+    ID          SERIAL PRIMARY KEY,
+    Fiction_ID  INT NOT NULL REFERENCES Fictions(ID) ON DELETE CASCADE,
+    Title       VARCHAR(255),
+    Content     TEXT,
+    Created     DATE DEFAULT CURRENT_DATE
+);
+
+
+INSERT INTO Fictions (Title, Subtitle, Author, Artist, Status, Genre, Synopsis)
+VALUES (
+    'The Great Adventure',
+    'A Journey of a Lifetime',
+    'John Doe',
+    'Jane Smith',
+    'Ongoing',
+    'Fantasy',
+    'An epic tale of courage.'
+);
+
+INSERT INTO Chapters (Fiction_ID, Title, Content)
+VALUES
+    (1, 'Chapter 1', 'This is the first chapter.'),
+    (1, 'Chapter 2', 'This is the second chapter.');
