@@ -1,0 +1,36 @@
+services:
+  fictsu-backend:
+    image: kwangsensei/fictsu-backend:latest
+    container_name: fictsu-backend
+    build:
+      context: ./fictsu-backend
+    depends_on:
+      - fictsu-database
+    hostname: fictsu-backend
+    networks:
+      - mynet
+    ports:
+      - 8080:8080
+
+  fictsu-database:
+    image: postgres:latest
+    container_name: fictsu-postgres
+    hostname: db
+    networks:
+      - mynet
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_DB: fictsu
+      POSTGRES_USER: kwang
+      POSTGRES_PASSWORD: fictsu
+    volumes:
+      - fictsu-database:/var/lib/postgresql/data
+
+volumes:
+  fictsu-database:
+    name: fictsu-postgres
+
+networks:
+  mynet:
+    driver: bridge

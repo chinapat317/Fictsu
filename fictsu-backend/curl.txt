@@ -1,0 +1,1 @@
+curl --include --header "Content-Type: application/json" --request POST --data "{\"title\": \"My First Fiction\", \"subtitle\": \"An Exciting Start\", \"author\": \"John Doe\", \"artist\": \"Jane Smith\", \"status\": \"ongoing\", \"genre\": \"fantasy\", \"synopsis\": \"A thrilling tale of adventure and mystery.\"}" http://localhost:8080

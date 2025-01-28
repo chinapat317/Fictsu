@@ -1,0 +1,1 @@
+docker exec -it fictsu-postgres psql -U postgres
