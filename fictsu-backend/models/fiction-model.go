@@ -19,6 +19,7 @@ const (
 
 type FictionModel struct {
 	ID			int				`json:"id"`
+	Cover		string			`json:"cover"`
 	Title 		string 			`json:"title"`
 	Subtitle 	string 			`json:"subtitle"`
 	Author		string 			`json:"author"`
@@ -26,6 +27,5 @@ type FictionModel struct {
 	Status		Status 			`json:"status"`
 	Synopsis	string 			`json:"synopsis"`
 	Genre		Genre			`json:"genre"`
-	Chapters	[]ChapterModel	`json:"chapters"`
 	Created		time.Time		`json:"created"`
 }
