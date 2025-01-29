@@ -5,16 +5,10 @@ import (
 )
 
 type Status string
-type Genre 	string
 
 const (
 	Completed	Status = "Completed"
 	Ongoing		Status = "Ongoing"
-
-	Fantasy Genre = "Fantasy"
-	Romance Genre = "Romance"
-	Horror  Genre = "Horror"
-	Action  Genre = "Action"
 )
 
 type FictionModel struct {
@@ -26,6 +20,12 @@ type FictionModel struct {
 	Artist		string 			`json:"artist"`
 	Status		Status 			`json:"status"`
 	Synopsis	string 			`json:"synopsis"`
-	Genre		Genre			`json:"genre"`
+	Genres		[]GenreModel	`json:"genres"`
+	Chapters	[]ChapterModel	`json:"chapters"`
 	Created		time.Time		`json:"created"`
+}
+
+type GenreModel struct {
+	ID			int 	`json:"id"`
+	Genre_Name	string 	`json:"genre_name"`
 }
