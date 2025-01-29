@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"time"
+	"strconv"
 	"net/http"
 	"database/sql"
 	"github.com/gin-gonic/gin"
@@ -11,12 +12,12 @@ import (
 	models "github.com/Fictsu/Fictsu/models"
 )
 
-func GetAllChapters(fiction_id string) ([]models.ChapterModel, error) {
+func GetAllChapters(fiction_id int) ([]models.ChapterModel, error) {
 	rows, err := db.DB.Query(
 		"SELECT ID, Fiction_ID, Title, Content, Created FROM Chapters WHERE Fiction_ID = $1 ORDER BY ID", fiction_id,
 	)
 	if err != nil {
-		return []models.ChapterModel{}, fmt.Errorf("no such a chapter")
+		return nil, fmt.Errorf("failed to retrieve chapters")
 	}
 
 	defer rows.Close()
@@ -30,7 +31,7 @@ func GetAllChapters(fiction_id string) ([]models.ChapterModel, error) {
 			&chapter.Content,
 			&chapter.Created,
 		); err != nil {
-			return []models.ChapterModel{}, fmt.Errorf("no such a chapter")
+			return nil, fmt.Errorf("failed to process chapter data")
 		}
 
 		chapters = append(chapters, chapter)
@@ -40,8 +41,18 @@ func GetAllChapters(fiction_id string) ([]models.ChapterModel, error) {
 }
 
 func GetChapter(ctx *gin.Context) {
-	fiction_id := ctx.Param("fiction_id")
-	chapter_id := ctx.Param("chapter_id")
+	fiction_id, err_str_to_int := strconv.Atoi(ctx.Param("fiction_id"))
+	if err_str_to_int != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"Error": "Invalid fiction ID"})
+		return
+	}
+
+	chapter_id, err_str_to_int := strconv.Atoi(ctx.Param("chapter_id"))
+	if err_str_to_int != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"Error": "Invalid chapter ID"})
+		return
+	}
+
 	chapter := models.ChapterModel{}
 	err := db.DB.QueryRow(
 		"SELECT ID, Fiction_ID, Title, Content, Created FROM Chapters WHERE Fiction_ID = $1 AND ID = $2 ORDER BY ID",
@@ -56,9 +67,9 @@ func GetChapter(ctx *gin.Context) {
 	)
 	if err != nil {
 		if err == sql.ErrNoRows{
-			ctx.IndentedJSON(http.StatusNotFound, gin.H{"Error": err.Error()})
+			ctx.IndentedJSON(http.StatusNotFound, gin.H{"Error": "Chapter not found"})
 		} else {
-			ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": err.Error()})
+			ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": "Failed to retrieve chapter"})
 		}
 
 		return
@@ -70,7 +81,7 @@ func GetChapter(ctx *gin.Context) {
 func CreateChapter(ctx *gin.Context) {
 	chapterCreateRequest := models.ChapterModel{}
 	if err := ctx.ShouldBindJSON(&chapterCreateRequest); err != nil {
-		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"Error": err.Error()})
+		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"Error": "Invalid data provided for chapter creation"})
 		return
 	}
 
