@@ -11,8 +11,18 @@ CREATE TABLE Fictions (
     Artist      VARCHAR(255),
     Status      VARCHAR(255),
     Synopsis    TEXT,
-    Genre       VARCHAR(255),
     Created     DATE DEFAULT CURRENT_DATE
+);
+
+CREATE TABLE Genres (
+    ID          SERIAL PRIMARY KEY,
+    Genre_Name  VARCHAR(255)
+);
+
+CREATE TABLE AssignGenretoFiction (
+    Fiction_ID  INT NOT NULL REFERENCES Fictions(ID) ON DELETE CASCADE,
+    Genre_ID    INT NOT NULL REFERENCES Genres(ID) ON DELETE CASCADE,
+    PRIMARY KEY (Fiction_ID, Genre_ID)
 );
 
 CREATE TABLE CHAPTERS (
@@ -23,17 +33,28 @@ CREATE TABLE CHAPTERS (
     Created     DATE DEFAULT CURRENT_DATE
 );
 
-
-INSERT INTO Fictions (Title, Subtitle, Author, Artist, Status, Genre, Synopsis)
+INSERT INTO Fictions (Cover, Title, Subtitle, Author, Artist, Status, Synopsis)
 VALUES (
+    'This is the Cover image.',
     'The Great Adventure',
     'A Journey of a Lifetime',
     'John Doe',
     'Jane Smith',
     'Ongoing',
-    'Fantasy',
     'An epic tale of courage.'
 );
+
+INSERT INTO Genres (Genre_Name)
+VALUES 
+    ('Fantasy'),
+    ('Romance'),
+    ('Horror'),
+    ('Action');
+
+INSERT INTO AssignGenretoFiction (Fiction_ID, Genre_ID)
+VALUES
+    (1, 1),
+    (1, 4);
 
 INSERT INTO Chapters (Fiction_ID, Title, Content)
 VALUES
