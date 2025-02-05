@@ -5,9 +5,9 @@ import (
 )
 
 type ChapterModel struct {
+	Fiction_ID	int			`json:"fiction_id"`
 	ID			int			`json:"id"`
 	Title 		string 		`json:"title"`
-	FictionID	int			`json:"fictionID"`
 	Content		string		`json:"content"`
 	Created 	time.Time	`json:"created"`
 }
