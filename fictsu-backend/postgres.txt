@@ -19,18 +19,19 @@ CREATE TABLE Genres (
     Genre_Name  VARCHAR(255)
 );
 
-CREATE TABLE AssignGenretoFiction (
+CREATE TABLE AssignGenreToFiction (
     Fiction_ID  INT NOT NULL REFERENCES Fictions(ID) ON DELETE CASCADE,
     Genre_ID    INT NOT NULL REFERENCES Genres(ID) ON DELETE CASCADE,
     PRIMARY KEY (Fiction_ID, Genre_ID)
 );
 
-CREATE TABLE CHAPTERS (
-    ID          SERIAL PRIMARY KEY,
+CREATE TABLE Chapters (
     Fiction_ID  INT NOT NULL REFERENCES Fictions(ID) ON DELETE CASCADE,
+    ID          INT NOT NULL,
     Title       VARCHAR(255),
     Content     TEXT,
-    Created     DATE DEFAULT CURRENT_DATE
+    Created     DATE DEFAULT CURRENT_DATE,
+    PRIMARY KEY (Fiction_ID, ID)
 );
 
 INSERT INTO Fictions (Cover, Title, Subtitle, Author, Artist, Status, Synopsis)
@@ -56,7 +57,7 @@ VALUES
     (1, 1),
     (1, 4);
 
-INSERT INTO Chapters (Fiction_ID, Title, Content)
+INSERT INTO Chapters (Fiction_ID, ID, Title, Content)
 VALUES
-    (1, 'Chapter 1', 'This is the first chapter.'),
-    (1, 'Chapter 2', 'This is the second chapter.');
+    (1, 1, 'Chapter 1', 'This is the first chapter.'),
+    (1, 2, 'Chapter 2', 'This is the second chapter.');
