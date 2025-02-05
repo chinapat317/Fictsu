@@ -1,1 +1,15 @@
-curl --include --header "Content-Type: application/json" --request POST --data "{\"title\": \"My First Fiction\", \"subtitle\": \"An Exciting Start\", \"author\": \"John Doe\", \"artist\": \"Jane Smith\", \"status\": \"ongoing\", \"genre\": \"fantasy\", \"synopsis\": \"A thrilling tale of adventure and mystery.\"}" http://localhost:8080
+Fiction:
+
+curl --include --header "Content-Type: application/json" --request POST --data "{\"cover\": \"This is the Cover image\", \"title\": \"My First Fiction\", \"subtitle\": \"An Exciting Start\", \"author\": \"John Doe\", \"artist\": \"Jane Smith\", \"status\": \"ongoing\", \"synopsis\": \"A thrilling tale of adventure and mystery.\"}" http://localhost:8080/api/
+
+curl --include --header "Content-Type: application/json" --request PUT --data "{\"title\": \"My Second Fiction\"}" http://localhost:8080/api/2
+
+curl --include --request DELETE http://localhost:8080/api/3
+
+Chapter:
+
+curl --include --header "Content-Type: application/json" --request POST --data "{\"fiction_id\": 2, \"id\": 1, \"title\": \"Chapter 1\", \"content\": \"This is the first chapter.\"}" http://localhost:8080/api/2
+
+curl --include --header "Content-Type: application/json" --request PUT --data "{\"title\": \"Chapter 2\"}" http://localhost:8080/api/2/1
+
+curl --include --request DELETE http://localhost:8080/api/2/1
