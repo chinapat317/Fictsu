@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"time"
 	"strconv"
 	"net/http"
@@ -11,7 +10,6 @@ import (
 	db "github.com/Fictsu/Fictsu/database"
 	models "github.com/Fictsu/Fictsu/models"
 )
-
 
 func GetAllFictions(ctx *gin.Context) {
 	rows, err := db.DB.Query(
@@ -99,31 +97,6 @@ func GetFiction(ctx *gin.Context) {
 	})
 }
 
-func GetAllGenres(ficion_id int) ([]models.GenreModel, error) {
-	rows, err := db.DB.Query(
-		"SELECT ID, Genre_Name FROM Genres JOIN AssignGenretoFiction ON ID = Genre_ID WHERE Fiction_ID = $1 ORDER BY ID", ficion_id,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve genres")
-	}
-
-	defer rows.Close()
-	genres := []models.GenreModel{}
-	for rows.Next() {
-		genre := models.GenreModel{}
-		if err := rows.Scan(
-			&genre.ID,
-			&genre.Genre_Name,
-		); err != nil {
-			return nil, fmt.Errorf("failed to process genre data")
-		}
-
-		genres = append(genres, genre)
-	}
-
-	return genres, nil
-}
-
 func CreateFiction(ctx *gin.Context) {
 	fictionCreateRequest := models.FictionModel{}
 	if err := ctx.ShouldBindJSON(&fictionCreateRequest); err != nil {
@@ -131,7 +104,127 @@ func CreateFiction(ctx *gin.Context) {
 		return
 	}
 
-	fictionCreateRequest.Created = time.Now()
+	var newFictionID int
+	var newCreatedTS time.Time
+	err := db.DB.QueryRow(
+		"INSERT INTO Fictions (Cover, Title, Subtitle, Author, Artist, Status, Synopsis) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING ID, Created",
+		fictionCreateRequest.Cover,
+		fictionCreateRequest.Title,
+		fictionCreateRequest.Subtitle,
+		fictionCreateRequest.Author,
+		fictionCreateRequest.Artist,
+		fictionCreateRequest.Status,
+		fictionCreateRequest.Synopsis,
+	).Scan(&newFictionID, &newCreatedTS)
+	if err != nil {
+		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": "Failed to create fiction"})
+		return
+	}
 
+	fictionCreateRequest.ID = newFictionID
+	fictionCreateRequest.Created = newCreatedTS
 	ctx.IndentedJSON(http.StatusCreated, fictionCreateRequest)
+}
+
+func EditFiction(ctx *gin.Context) {
+	fiction_id, err := strconv.Atoi(ctx.Param("fiction_id"))
+	if err != nil {
+		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"Error": "Invalid fiction ID"})
+		return
+	}
+
+	fictionUpdateRequest := models.FictionModel{}
+	if err := ctx.ShouldBindJSON(&fictionUpdateRequest); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"Error": "Invalid input data"})
+		return
+	}
+
+	query := "UPDATE Fictions SET "
+	params := []interface{}{}
+	paramIndex := 1
+	if fictionUpdateRequest.Cover != "" {
+		query += "Cover = $" + strconv.Itoa(paramIndex) + ", "
+		params = append(params, fictionUpdateRequest.Cover)
+		paramIndex++
+	}
+
+	if fictionUpdateRequest.Title != "" {
+		query += "Title = $" + strconv.Itoa(paramIndex) + ", "
+		params = append(params, fictionUpdateRequest.Title)
+		paramIndex++
+	}
+
+	if fictionUpdateRequest.Subtitle != "" {
+		query += "Subtitle = $" + strconv.Itoa(paramIndex) + ", "
+		params = append(params, fictionUpdateRequest.Subtitle)
+		paramIndex++
+	}
+
+	if fictionUpdateRequest.Author != "" {
+		query += "Author = $" + strconv.Itoa(paramIndex) + ", "
+		params = append(params, fictionUpdateRequest.Author)
+		paramIndex++
+	}
+
+	if fictionUpdateRequest.Artist != "" {
+		query += "Artist = $" + strconv.Itoa(paramIndex) + ", "
+		params = append(params, fictionUpdateRequest.Artist)
+		paramIndex++
+	}
+
+	if fictionUpdateRequest.Status != "" {
+		query += "Status = $" + strconv.Itoa(paramIndex) + ", "
+		params = append(params, fictionUpdateRequest.Status)
+		paramIndex++
+	}
+
+	if fictionUpdateRequest.Synopsis != "" {
+		query += "Synopsis = $" + strconv.Itoa(paramIndex) + ", "
+		params = append(params, fictionUpdateRequest.Synopsis)
+		paramIndex++
+	}
+
+	if len(params) == 0 {
+		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"Error": "No valid fields provided for update"})
+		return
+	}
+
+	query = query[:len(query) - 2] + " WHERE ID = $" + strconv.Itoa(paramIndex)
+	params = append(params, fiction_id)
+
+	result, err := db.DB.Exec(query, params...)
+	if err != nil {
+		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": "Failed to update fiction"})
+		return
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		ctx.IndentedJSON(http.StatusNotFound, gin.H{"Error": "Fiction not found"})
+		return
+	}
+
+	ctx.IndentedJSON(http.StatusOK, gin.H{"Message": "Fiction updated successfully"})
+}
+
+func DeleteFiction(ctx *gin.Context) {
+	fiction_id, err := strconv.Atoi(ctx.Param("fiction_id"))
+	if err != nil {
+		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"Error": "Invalid fiction ID"})
+		return
+	}
+
+	result, err := db.DB.Exec("DELETE FROM Fictions WHERE ID = $1", fiction_id)
+	if err != nil {
+		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": "Failed to delete fiction"})
+		return
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		ctx.IndentedJSON(http.StatusNotFound, gin.H{"Error": "Fiction not found"})
+		return
+	}
+
+	ctx.IndentedJSON(http.StatusOK, gin.H{"Message": "Fiction deleted successfully"})
 }
