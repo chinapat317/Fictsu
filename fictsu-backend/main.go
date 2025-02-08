@@ -35,7 +35,7 @@ func main() {
 	store := sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
 	store.Options = &sessions.Options{
 		HttpOnly: true, 	// Prevent JavaScript access to the cookie
-    	Secure:   false, 	// Set to true in production (requires HTTPS)
+    	Secure:   true, 	// Set to true in production (requires HTTPS)
 		MaxAge:   1209600, 	// 2 weeks in seconds
 	}
 
@@ -49,8 +49,8 @@ func main() {
 	api.GET("/", handlers.GetAllFictions)
 	api.GET("/:fiction_id", handlers.GetFiction)
 	api.GET("/:fiction_id/:chapter_id", handlers.GetChapter)
-	api.GET("/auth/:provider", handlers.Authen)
-    api.GET("/auth/:provider/callback", func(ctx *gin.Context) {
+	api.GET("/auth/:provider", handlers.GetOpenAuthorization)
+	api.GET("/auth/:provider/callback", func(ctx *gin.Context) {
 		handlers.Callback(ctx, store)
 	})
 
