@@ -7,9 +7,10 @@ import (
 	models "github.com/Fictsu/Fictsu/models"
 )
 
-func GetAllGenres(ficion_id int) ([]models.GenreModel, error) {
+func GetAllGenres(ficion_id string) ([]models.GenreModel, error) {
 	rows, err := db.DB.Query(
-		"SELECT ID, Genre_Name FROM Genres JOIN AssignGenretoFiction ON ID = Genre_ID WHERE Fiction_ID = $1 ORDER BY ID", ficion_id,
+		"SELECT ID, Genre_Name FROM Genres JOIN AssignGenretoFiction ON ID = Genre_ID WHERE Fiction_ID = $1 ORDER BY ID",
+		ficion_id,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve genres")
