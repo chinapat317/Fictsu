@@ -22,6 +22,12 @@ func main() {
 	client_id := os.Getenv("CLIENT_ID")
 	client_secret := os.Getenv("CLIENT_SECRET")
 	client_callback_URL := os.Getenv("CLIENT_CALLBACK_URL")
+    store := sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
+	store.Options = &sessions.Options{
+		HttpOnly: true,
+		Secure:   false,
+		Path:     "/",
+	}
 
 	goth.UseProviders(
 		google.New(
@@ -31,13 +37,6 @@ func main() {
 			"email", "profile",
 		),
 	)
-	
-	store := sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
-	store.Options = &sessions.Options{
-		HttpOnly: true, 	// Prevent JavaScript access to the cookie
-    	Secure:   true, 	// Set to true in production (requires HTTPS)
-		MaxAge:   1209600, 	// 2 weeks in seconds
-	}
 
 	db.Connection()
 	defer db.CloseConnection()
@@ -46,15 +45,21 @@ func main() {
 
 	api := router.Group("/api")
 
-	api.GET("/", handlers.GetAllFictions)
+	api.GET("", handlers.GetAllFictions)
+	api.GET("/user", func(ctx *gin.Context) {
+		handlers.GetUserProfile(ctx, store)
+	})
+	api.GET("/allusers", handlers.GetAllUsers)
 	api.GET("/:fiction_id", handlers.GetFiction)
 	api.GET("/:fiction_id/:chapter_id", handlers.GetChapter)
 	api.GET("/auth/:provider", handlers.GetOpenAuthorization)
 	api.GET("/auth/:provider/callback", func(ctx *gin.Context) {
-		handlers.Callback(ctx, store)
+		handlers.AuthorizedCallback(ctx, store)
 	})
 
-	api.POST("/", handlers.CreateFiction)
+	api.POST("", func(ctx *gin.Context) {
+		handlers.CreateFiction(ctx, store)
+	})
 	api.POST("/:fiction_id", handlers.CreateChapter)
 
 	api.PUT("/:fiction_id", handlers.EditFiction)
