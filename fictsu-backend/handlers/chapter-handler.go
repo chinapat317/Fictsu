@@ -13,7 +13,7 @@ import (
 	models "github.com/Fictsu/Fictsu/models"
 )
 
-func GetAllChapters(fiction_id int) ([]models.ChapterModel, error) {
+func GetAllChapters(fiction_id string) ([]models.ChapterModel, error) {
 	rows, err := db.DB.Query(
 		"SELECT Fiction_ID, ID, Title, Content, Created FROM Chapters WHERE Fiction_ID = $1 ORDER BY ID",
 		fiction_id,
@@ -43,17 +43,8 @@ func GetAllChapters(fiction_id int) ([]models.ChapterModel, error) {
 }
 
 func GetChapter(ctx *gin.Context) {
-	fiction_id, err := strconv.Atoi(ctx.Param("fiction_id"))
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"Error": "Invalid fiction ID"})
-		return
-	}
-
-	chapter_id, err := strconv.Atoi(ctx.Param("chapter_id"))
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"Error": "Invalid chapter ID"})
-		return
-	}
+	fiction_id := ctx.Param("fiction_id")
+	chapter_id := ctx.Param("chapter_id")
 
 	chapter := models.ChapterModel{}
 	err_select := db.DB.QueryRow(
@@ -68,7 +59,7 @@ func GetChapter(ctx *gin.Context) {
 		&chapter.Created,
 	)
 	if err_select != nil {
-		if err_select == sql.ErrNoRows{
+		if err_select == sql.ErrNoRows {
 			ctx.IndentedJSON(http.StatusNotFound, gin.H{"Error": "Chapter not found"})
 		} else {
 			ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": "Failed to retrieve chapter"})
@@ -81,78 +72,65 @@ func GetChapter(ctx *gin.Context) {
 }
 
 func CreateChapter(ctx *gin.Context) {
-	fiction_id, err := strconv.Atoi(ctx.Param("fiction_id"))
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"Error": "Invalid fiction ID"})
-		return
-	}
+	fiction_id := ctx.Param("fiction_id")
 
-	chapterCreateRequest := models.ChapterModel{}
-	if err := ctx.ShouldBindJSON(&chapterCreateRequest); err != nil {
+	chapter_create_request := models.ChapterModel{}
+	if err := ctx.ShouldBindJSON(&chapter_create_request); err != nil {
 		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"Error": "Invalid data provided for chapter creation"})
 		return
 	}
 
-	var nextChapterID int
-	err_nextChapterID := db.DB.QueryRow(
+	var next_chapter_ID int
+	err_next_chapter_ID := db.DB.QueryRow(
 		"SELECT COALESCE(MAX(ID), 0) + 1 FROM Chapters WHERE Fiction_ID = $1",
 		fiction_id,
-	).Scan(&nextChapterID)
-	if err_nextChapterID != nil {
+	).Scan(&next_chapter_ID)
+	if err_next_chapter_ID != nil {
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": "Failed to calculate next chapter ID"})
         return
 	}
 
-	var newCreatedTS time.Time
+	var new_created_TS time.Time
 	err_insert := db.DB.QueryRow(
 		"INSERT INTO Chapters (Fiction_ID, ID, Title, Content) VALUES ($1, $2, $3, $4) RETURNING Created",
 		fiction_id,
-		nextChapterID,
-		chapterCreateRequest.Title,
-		chapterCreateRequest.Content,
-	).Scan(&newCreatedTS)
+		next_chapter_ID,
+		chapter_create_request.Title,
+		chapter_create_request.Content,
+	).Scan(&new_created_TS)
 	if err_insert != nil {
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": "Failed to create chapter"})
 		return
 	}
 
-	chapterCreateRequest.ID = nextChapterID
-	chapterCreateRequest.Created = newCreatedTS
-	ctx.IndentedJSON(http.StatusCreated, chapterCreateRequest)
+	chapter_create_request.ID = next_chapter_ID
+	chapter_create_request.Created = new_created_TS
+	ctx.IndentedJSON(http.StatusCreated, chapter_create_request)
 }
 
 func EditChapter(ctx *gin.Context) {
-	fiction_id, err := strconv.Atoi(ctx.Param("fiction_id"))
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"Error": "Invalid fiction ID"})
-		return
-	}
+	fiction_id := ctx.Param("fiction_id")
+	chapter_id := ctx.Param("chapter_id")
 
-	chapter_id, err := strconv.Atoi(ctx.Param("chapter_id"))
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"Error": "Invalid chapter ID"})
-		return
-	}
-
-	chapterUpdateRequest := models.ChapterModel{}
-	if err := ctx.ShouldBindJSON(&chapterUpdateRequest); err != nil {
+	chapter_update_request := models.ChapterModel{}
+	if err := ctx.ShouldBindJSON(&chapter_update_request); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"Error": "Invalid input data"})
 		return
 	}
 
 	query := "UPDATE Chapters SET "
 	params := []interface{}{}
-	paramIndex := 1
-	if chapterUpdateRequest.Title != "" {
-		query += "Title = $" + strconv.Itoa(paramIndex) + ", "
-		params = append(params, chapterUpdateRequest.Title)
-		paramIndex++
+	param_index := 1
+	if chapter_update_request.Title != "" {
+		query += "Title = $" + strconv.Itoa(param_index) + ", "
+		params = append(params, chapter_update_request.Title)
+		param_index++
 	}
 
-	if chapterUpdateRequest.Content != "" {
-		query += "Content = $" + strconv.Itoa(paramIndex) + ", "
-		params = append(params, chapterUpdateRequest.Content)
-		paramIndex++
+	if chapter_update_request.Content != "" {
+		query += "Content = $" + strconv.Itoa(param_index) + ", "
+		params = append(params, chapter_update_request.Content)
+		param_index++
 	}
 
 	if len(params) == 0 {
@@ -160,7 +138,7 @@ func EditChapter(ctx *gin.Context) {
 		return
 	}
 
-	query = strings.TrimSuffix(query, ", ") + " WHERE ID = $" + strconv.Itoa(paramIndex) + " AND Fiction_ID = $" + strconv.Itoa(paramIndex + 1)
+	query = strings.TrimSuffix(query, ", ") + " WHERE ID = $" + strconv.Itoa(param_index) + " AND Fiction_ID = $" + strconv.Itoa(param_index + 1)
 	params = append(params, chapter_id, fiction_id)
 
 	result, err := db.DB.Exec(query, params...)
@@ -169,8 +147,8 @@ func EditChapter(ctx *gin.Context) {
 		return
 	}
 
-	rowsAffected, _ := result.RowsAffected()
-	if rowsAffected == 0 {
+	rows_affected, _ := result.RowsAffected()
+	if rows_affected == 0 {
 		ctx.IndentedJSON(http.StatusNotFound, gin.H{"Error": "Chapter not found"})
 		return
 	}
@@ -179,17 +157,8 @@ func EditChapter(ctx *gin.Context) {
 }
 
 func DeleteChapter(ctx *gin.Context) {
-	fiction_id, err := strconv.Atoi(ctx.Param("fiction_id"))
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"Error": "Invalid fiction ID"})
-		return
-	}
-
-	chapter_id, err := strconv.Atoi(ctx.Param("chapter_id"))
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"Error": "Invalid chapter ID"})
-		return
-	}
+	fiction_id := ctx.Param("fiction_id")
+	chapter_id := ctx.Param("chapter_id")
 
 	result, err := db.DB.Exec("DELETE FROM Chapters WHERE Fiction_ID = $1 AND ID = $2", fiction_id, chapter_id)
 	if err != nil {
@@ -197,8 +166,8 @@ func DeleteChapter(ctx *gin.Context) {
 		return
 	}
 
-	rowsAffected, _ := result.RowsAffected()
-	if rowsAffected == 0 {
+	rows_affected, _ := result.RowsAffected()
+	if rows_affected == 0 {
 		ctx.IndentedJSON(http.StatusNotFound, gin.H{"Error": "Chapter not found"})
 		return
 	}
