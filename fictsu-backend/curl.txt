@@ -1,6 +1,6 @@
 Fiction:
 
-curl --include --header "Content-Type: application/json" --request POST --data "{\"cover\": \"This is the Cover image\", \"title\": \"My First Fiction\", \"subtitle\": \"An Exciting Start\", \"author\": \"John Doe\", \"artist\": \"Jane Smith\", \"status\": \"ongoing\", \"synopsis\": \"A thrilling tale of adventure and mystery.\"}" http://localhost:8080/api/
+curl --include --cookie cookies.txt --header "Content-Type: application/json" --request POST --data "{\"cover\": \"This is the Cover image\", \"title\": \"My First Fiction\", \"subtitle\": \"An Exciting Start\", \"author\": \"John Doe\", \"artist\": \"Jane Smith\", \"status\": \"ongoing\", \"synopsis\": \"A thrilling tale of adventure and mystery.\"}" http://localhost:8080/api
 
 curl --include --header "Content-Type: application/json" --request PUT --data "{\"title\": \"My Second Fiction\"}" http://localhost:8080/api/2
 
