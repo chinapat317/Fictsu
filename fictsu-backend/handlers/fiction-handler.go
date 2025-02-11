@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"database/sql"
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/sessions"
 
 	db "github.com/Fictsu/Fictsu/database"
 	models "github.com/Fictsu/Fictsu/models"
@@ -13,7 +14,7 @@ import (
 
 func GetAllFictions(ctx *gin.Context) {
 	rows, err := db.DB.Query(
-		"SELECT ID, Cover, Title, Subtitle, Author, Artist, Status, Synopsis, Created FROM Fictions",
+		"SELECT ID, Contributor_ID, Contributor_Name, Cover, Title, Subtitle, Author, Artist, Status, Synopsis, Created FROM Fictions",
 	)
 	if err != nil {
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": "Failed to fetch fictions"})
@@ -26,6 +27,8 @@ func GetAllFictions(ctx *gin.Context) {
 		fiction := models.FictionModel{}
 		if err := rows.Scan(
 			&fiction.ID,
+			&fiction.Contributor_ID,
+			&fiction.Contributor_Name,
 			&fiction.Cover,
 			&fiction.Title,
 			&fiction.Subtitle,
@@ -46,17 +49,15 @@ func GetAllFictions(ctx *gin.Context) {
 }
 
 func GetFiction(ctx *gin.Context) {
-	fiction_id, err_str_to_int := strconv.Atoi(ctx.Param("fiction_id"))
-	if err_str_to_int != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"Error": "Invalid fiction ID"})
-		return
-	}
-
+	fiction_id := ctx.Param("fiction_id")
 	fiction := models.FictionModel{}
 	err := db.DB.QueryRow(
-		"SELECT ID, Cover, Title, Subtitle, Author, Artist, Status, Synopsis, Created FROM Fictions WHERE ID = $1", fiction_id,
+		"SELECT ID, Contributor_ID, Contributor_Name, Cover, Title, Subtitle, Author, Artist, Status, Synopsis, Created FROM Fictions WHERE ID = $1",
+		fiction_id,
 	).Scan(
 		&fiction.ID,
+		&fiction.Contributor_ID,
+		&fiction.Contributor_Name,
 		&fiction.Cover,
 		&fiction.Title,
 		&fiction.Subtitle,
@@ -66,8 +67,9 @@ func GetFiction(ctx *gin.Context) {
 		&fiction.Synopsis,
 		&fiction.Created,
 	)
+
 	if err != nil {
-		if err == sql.ErrNoRows{
+		if err == sql.ErrNoRows {
 			ctx.IndentedJSON(http.StatusNotFound, gin.H{"Error": "Fiction not found"})
 		} else {
 			ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": "Failed to retrieve fiction"})
@@ -97,91 +99,106 @@ func GetFiction(ctx *gin.Context) {
 	})
 }
 
-func CreateFiction(ctx *gin.Context) {
-	fictionCreateRequest := models.FictionModel{}
-	if err := ctx.ShouldBindJSON(&fictionCreateRequest); err != nil {
+func CreateFiction(ctx *gin.Context, store *sessions.CookieStore) {
+	session, err_sess := store.Get(ctx.Request, "fictsu-session")
+	if err_sess != nil {
+		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": "Failed to get session"})
+		return
+	}
+
+	ID_from_session := session.Values["ID"]
+	name_from_session := session.Values["name"]
+	if ID_from_session == nil || name_from_session == nil {
+		ctx.IndentedJSON(http.StatusUnauthorized, gin.H{"Error": "Unauthorized. Please log in to create a fiction."})
+		return
+	}
+
+	ID_to_DB := ID_from_session.(int)
+	name_to_DB := name_from_session.(string)
+	fiction_create_request := models.FictionModel{}
+	if err := ctx.ShouldBindJSON(&fiction_create_request); err != nil {
 		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"Error": "Invalid data provided for fiction creation"})
 		return
 	}
 
-	var newFictionID int
-	var newCreatedTS time.Time
+	fiction_create_request.Contributor_ID = ID_to_DB
+	fiction_create_request.Contributor_Name = name_to_DB
+
+	var new_fiction_ID int
+	var new_created_TS time.Time
 	err := db.DB.QueryRow(
-		"INSERT INTO Fictions (Cover, Title, Subtitle, Author, Artist, Status, Synopsis) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING ID, Created",
-		fictionCreateRequest.Cover,
-		fictionCreateRequest.Title,
-		fictionCreateRequest.Subtitle,
-		fictionCreateRequest.Author,
-		fictionCreateRequest.Artist,
-		fictionCreateRequest.Status,
-		fictionCreateRequest.Synopsis,
-	).Scan(&newFictionID, &newCreatedTS)
+		"INSERT INTO Fictions (Contributor_ID, Contributor_Name, Cover, Title, Subtitle, Author, Artist, Status, Synopsis) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING ID, Created",
+		fiction_create_request.Contributor_ID,
+		fiction_create_request.Contributor_Name,
+		fiction_create_request.Cover,
+		fiction_create_request.Title,
+		fiction_create_request.Subtitle,
+		fiction_create_request.Author,
+		fiction_create_request.Artist,
+		fiction_create_request.Status,
+		fiction_create_request.Synopsis,
+	).Scan(&new_fiction_ID, &new_created_TS)
 	if err != nil {
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": "Failed to create fiction"})
 		return
 	}
 
-	fictionCreateRequest.ID = newFictionID
-	fictionCreateRequest.Created = newCreatedTS
-	ctx.IndentedJSON(http.StatusCreated, fictionCreateRequest)
+	fiction_create_request.ID = new_fiction_ID
+	fiction_create_request.Created = new_created_TS
+	ctx.IndentedJSON(http.StatusCreated, fiction_create_request)
 }
 
 func EditFiction(ctx *gin.Context) {
-	fiction_id, err := strconv.Atoi(ctx.Param("fiction_id"))
-	if err != nil {
-		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"Error": "Invalid fiction ID"})
-		return
-	}
-
-	fictionUpdateRequest := models.FictionModel{}
-	if err := ctx.ShouldBindJSON(&fictionUpdateRequest); err != nil {
+	fiction_id := ctx.Param("fiction_id")
+	fiction_update_request := models.FictionModel{}
+	if err := ctx.ShouldBindJSON(&fiction_update_request); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"Error": "Invalid input data"})
 		return
 	}
 
 	query := "UPDATE Fictions SET "
 	params := []interface{}{}
-	paramIndex := 1
-	if fictionUpdateRequest.Cover != "" {
-		query += "Cover = $" + strconv.Itoa(paramIndex) + ", "
-		params = append(params, fictionUpdateRequest.Cover)
-		paramIndex++
+	param_index := 1
+	if fiction_update_request.Cover != "" {
+		query += "Cover = $" + strconv.Itoa(param_index) + ", "
+		params = append(params, fiction_update_request.Cover)
+		param_index++
 	}
 
-	if fictionUpdateRequest.Title != "" {
-		query += "Title = $" + strconv.Itoa(paramIndex) + ", "
-		params = append(params, fictionUpdateRequest.Title)
-		paramIndex++
+	if fiction_update_request.Title != "" {
+		query += "Title = $" + strconv.Itoa(param_index) + ", "
+		params = append(params, fiction_update_request.Title)
+		param_index++
 	}
 
-	if fictionUpdateRequest.Subtitle != "" {
-		query += "Subtitle = $" + strconv.Itoa(paramIndex) + ", "
-		params = append(params, fictionUpdateRequest.Subtitle)
-		paramIndex++
+	if fiction_update_request.Subtitle != "" {
+		query += "Subtitle = $" + strconv.Itoa(param_index) + ", "
+		params = append(params, fiction_update_request.Subtitle)
+		param_index++
 	}
 
-	if fictionUpdateRequest.Author != "" {
-		query += "Author = $" + strconv.Itoa(paramIndex) + ", "
-		params = append(params, fictionUpdateRequest.Author)
-		paramIndex++
+	if fiction_update_request.Author != "" {
+		query += "Author = $" + strconv.Itoa(param_index) + ", "
+		params = append(params, fiction_update_request.Author)
+		param_index++
 	}
 
-	if fictionUpdateRequest.Artist != "" {
-		query += "Artist = $" + strconv.Itoa(paramIndex) + ", "
-		params = append(params, fictionUpdateRequest.Artist)
-		paramIndex++
+	if fiction_update_request.Artist != "" {
+		query += "Artist = $" + strconv.Itoa(param_index) + ", "
+		params = append(params, fiction_update_request.Artist)
+		param_index++
 	}
 
-	if fictionUpdateRequest.Status != "" {
-		query += "Status = $" + strconv.Itoa(paramIndex) + ", "
-		params = append(params, fictionUpdateRequest.Status)
-		paramIndex++
+	if fiction_update_request.Status != "" {
+		query += "Status = $" + strconv.Itoa(param_index) + ", "
+		params = append(params, fiction_update_request.Status)
+		param_index++
 	}
 
-	if fictionUpdateRequest.Synopsis != "" {
-		query += "Synopsis = $" + strconv.Itoa(paramIndex) + ", "
-		params = append(params, fictionUpdateRequest.Synopsis)
-		paramIndex++
+	if fiction_update_request.Synopsis != "" {
+		query += "Synopsis = $" + strconv.Itoa(param_index) + ", "
+		params = append(params, fiction_update_request.Synopsis)
+		param_index++
 	}
 
 	if len(params) == 0 {
@@ -189,7 +206,7 @@ func EditFiction(ctx *gin.Context) {
 		return
 	}
 
-	query = query[:len(query) - 2] + " WHERE ID = $" + strconv.Itoa(paramIndex)
+	query = query[:len(query) - 2] + " WHERE ID = $" + strconv.Itoa(param_index)
 	params = append(params, fiction_id)
 
 	result, err := db.DB.Exec(query, params...)
@@ -198,8 +215,8 @@ func EditFiction(ctx *gin.Context) {
 		return
 	}
 
-	rowsAffected, _ := result.RowsAffected()
-	if rowsAffected == 0 {
+	rows_affected, _ := result.RowsAffected()
+	if rows_affected == 0 {
 		ctx.IndentedJSON(http.StatusNotFound, gin.H{"Error": "Fiction not found"})
 		return
 	}
@@ -208,20 +225,15 @@ func EditFiction(ctx *gin.Context) {
 }
 
 func DeleteFiction(ctx *gin.Context) {
-	fiction_id, err := strconv.Atoi(ctx.Param("fiction_id"))
-	if err != nil {
-		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"Error": "Invalid fiction ID"})
-		return
-	}
-
+	fiction_id := ctx.Param("fiction_id")
 	result, err := db.DB.Exec("DELETE FROM Fictions WHERE ID = $1", fiction_id)
 	if err != nil {
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": "Failed to delete fiction"})
 		return
 	}
 
-	rowsAffected, _ := result.RowsAffected()
-	if rowsAffected == 0 {
+	rows_affected, _ := result.RowsAffected()
+	if rows_affected == 0 {
 		ctx.IndentedJSON(http.StatusNotFound, gin.H{"Error": "Fiction not found"})
 		return
 	}
