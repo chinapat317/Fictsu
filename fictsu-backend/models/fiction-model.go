@@ -12,17 +12,19 @@ const (
 )
 
 type FictionModel struct {
-	ID			int				`json:"id"`
-	Cover		string			`json:"cover"`
-	Title 		string 			`json:"title"`
-	Subtitle 	string 			`json:"subtitle"`
-	Author		string 			`json:"author"`
-	Artist		string 			`json:"artist"`
-	Status		Status 			`json:"status"`
-	Synopsis	string 			`json:"synopsis"`
-	Genres		[]GenreModel	`json:"genres"`
-	Chapters	[]ChapterModel	`json:"chapters"`
-	Created		time.Time		`json:"created"`
+	ID					int				`json:"id"`
+	Contributor_ID		int				`json:"contributor_id"`
+	Contributor_Name	string			`json:"contributor_name"`
+	Cover				string			`json:"cover"`
+	Title 				string 			`json:"title"`
+	Subtitle 			string 			`json:"subtitle"`
+	Author				string 			`json:"author"`
+	Artist				string 			`json:"artist"`
+	Status				Status 			`json:"status"`
+	Synopsis			string 			`json:"synopsis"`
+	Genres				[]GenreModel	`json:"genres"`
+	Chapters			[]ChapterModel	`json:"chapters"`
+	Created				time.Time		`json:"created"`
 }
 
 type GenreModel struct {
