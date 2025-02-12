@@ -14,8 +14,14 @@ import (
 
 func GetAllUsers(ctx *gin.Context) { // For testing
 	rows, err := db.DB.Query(
-		"SELECT ID, User_ID, Name, Email, Avatar_URL, Joined FROM Users",
+		`
+		SELECT
+			ID, User_ID, Name, Email, Avatar_URL, Joined
+		FROM
+			Users
+		`,
 	)
+
 	if err != nil {
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": "Failed to fetch users"})
 		return
@@ -59,7 +65,14 @@ func GetUserProfile(ctx *gin.Context, store *sessions.CookieStore) {
 	ID_to_DB := ID_from_session.(int)
 	user := models.UserModel{}
 	err := db.DB.QueryRow(
-		"SELECT ID, User_ID, Super_User, Name, Email, Avatar_URL, Joined FROM Users WHERE ID = $1",
+		`
+		SELECT
+			ID, User_ID, Super_User, Name, Email, Avatar_URL, Joined
+		FROM
+			Users
+		WHERE
+			ID = $1
+		`,
 		ID_to_DB,
 	).Scan(
 		&user.ID,
@@ -81,21 +94,35 @@ func GetUserProfile(ctx *gin.Context, store *sessions.CookieStore) {
 		return
 	}
 
-	ctx.IndentedJSON(http.StatusOK, gin.H{
-		"ID":         ID_to_DB,
-		"User_ID":    user.User_ID,
-		"Super_User": user.Super_User,
-		"Name":       user.Name,
-		"Email":      user.Email,
-		"Avatar_URL": user.Avatar_URL,
-		"Joined":     user.Joined,
-	})
+	fav_fictions, err_fav := GetFavFictions(ID_to_DB)
+	if err_fav != nil {
+		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": "Failed to retrieve favorite fictions"})
+		return
+	}
+
+	contri_fictions, err_contri := GetContributedFictions(ID_to_DB)
+	if err_contri != nil {
+		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": "Failed to retrieve contributed fictions"})
+		return
+	}
+
+	user.ID = ID_to_DB
+	user.Fav_Fictions = fav_fictions
+	user.Contributed_Fic = contri_fictions
+	ctx.IndentedJSON(http.StatusOK, gin.H{"User_Profile": user})
 }
 
 func GetUser(user_id string) (*models.UserModel, error) {
 	user := models.UserModel{}
 	err := db.DB.QueryRow(
-		"SELECT ID, User_ID, Name, Email, Avatar_URL, Joined FROM Users WHERE User_ID = $1",
+		`
+		SELECT
+			ID, User_ID, Name, Email, Avatar_URL, Joined
+		FROM
+			Users
+		WHERE
+			User_ID = $1
+		`,
 		user_id,
 	).Scan(
 		&user.ID,
@@ -122,7 +149,11 @@ func CreateUser(user *models.UserModel) (*models.UserModel, error) {
 	var new_user_Google_ID string
 	var new_user_joined time.Time
 	err := db.DB.QueryRow(
-		"INSERT INTO Users (User_ID, Name, Email, Avatar_URL) VALUES ($1, $2, $3, $4) RETURNING ID, User_ID, Joined",
+		`
+		INSERT INTO Users (User_ID, Name, Email, Avatar_URL)
+		VALUES ($1, $2, $3, $4)
+		RETURNING ID, User_ID, Joined
+		`,
 		user.User_ID,
 		user.Name,
 		user.Email,
