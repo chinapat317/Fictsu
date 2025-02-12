@@ -1,15 +1,21 @@
 Fiction:
 
-curl --include --cookie cookies.txt --header "Content-Type: application/json" --request POST --data "{\"cover\": \"This is the Cover image\", \"title\": \"My First Fiction\", \"subtitle\": \"An Exciting Start\", \"author\": \"John Doe\", \"artist\": \"Jane Smith\", \"status\": \"ongoing\", \"synopsis\": \"A thrilling tale of adventure and mystery.\"}" http://localhost:8080/api
+curl --include --header "Cookie: fictsu-session=" --header "Content-Type: application/json" --request POST --data "{\"cover\": \"This is the Cover image\", \"title\": \"My First Fiction\", \"subtitle\": \"An Exciting Start\", \"author\": \"John Doe\", \"artist\": \"Jane Smith\", \"status\": \"ongoing\", \"synopsis\": \"A thrilling tale of adventure and mystery.\"}" http://localhost:8080/api/f/c
 
-curl --include --header "Content-Type: application/json" --request PUT --data "{\"title\": \"My Second Fiction\"}" http://localhost:8080/api/2
+curl --include --header "Cookie: fictsu-session=" --header "Content-Type: application/json" --request PUT --data "{\"title\": \"My Second Fiction\"}" http://localhost:8080/api/f/2/u
 
-curl --include --request DELETE http://localhost:8080/api/3
+curl --include --header "Cookie: fictsu-session=" --request DELETE http://localhost:8080/api/f/3/d
+
+Favorite Fiction
+
+curl --include --header "Cookie: fictsu-session=" --request POST http://localhost:8080/api/f/1/fav
+
+curl --include --header "Cookie: fictsu-session=" --request DELETE http://localhost:8080/api/f/1/fav/rmv
 
 Chapter:
 
-curl --include --header "Content-Type: application/json" --request POST --data "{\"fiction_id\": 2, \"id\": 1, \"title\": \"Chapter 1\", \"content\": \"This is the first chapter.\"}" http://localhost:8080/api/2
+curl --include --header "Cookie: fictsu-session=" --header "Content-Type: application/json" --request POST --data "{\"title\": \"Chapter 1\", \"content\": \"This is the first chapter.\"}" http://localhost:8080/api/f/2/u
 
-curl --include --header "Content-Type: application/json" --request PUT --data "{\"title\": \"Chapter 2\"}" http://localhost:8080/api/2/1
+curl --include --header "Cookie: fictsu-session=" --header "Content-Type: application/json" --request PUT --data "{\"title\": \"Chapter 2\", \"content\": \"This is the second chapter.\"}" http://localhost:8080/api/f/2/1/u
 
-curl --include --request DELETE http://localhost:8080/api/2/1
+curl --include --header "Cookie: fictsu-session=" --request DELETE http://localhost:8080/api/f/2/1/d
