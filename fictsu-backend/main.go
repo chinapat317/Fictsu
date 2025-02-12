@@ -45,28 +45,48 @@ func main() {
 
 	api := router.Group("/api")
 
+	// GET
 	api.GET("", handlers.GetAllFictions)
 	api.GET("/user", func(ctx *gin.Context) {
 		handlers.GetUserProfile(ctx, store)
 	})
 	api.GET("/allusers", handlers.GetAllUsers)
-	api.GET("/:fiction_id", handlers.GetFiction)
-	api.GET("/:fiction_id/:chapter_id", handlers.GetChapter)
+	api.GET("f/:fiction_id", handlers.GetFiction)
+	api.GET("f/:fiction_id/:chapter_id", handlers.GetChapter)
 	api.GET("/auth/:provider", handlers.GetOpenAuthorization)
 	api.GET("/auth/:provider/callback", func(ctx *gin.Context) {
 		handlers.AuthorizedCallback(ctx, store)
 	})
 
-	api.POST("", func(ctx *gin.Context) {
+	// POST
+	api.POST("/c", func(ctx *gin.Context) {
 		handlers.CreateFiction(ctx, store)
 	})
-	api.POST("/:fiction_id", handlers.CreateChapter)
+	api.POST("f/:fiction_id/c", func(ctx *gin.Context) {
+		handlers.CreateChapter(ctx, store)
+	})
+	api.POST("f/:fiction_id/fav", func(ctx *gin.Context) {
+		handlers.AddFavoriteFiction(ctx, store)
+	})
 
-	api.PUT("/:fiction_id", handlers.EditFiction)
-	api.PUT("/:fiction_id/:chapter_id", handlers.EditChapter)
+	// PUT
+	api.PUT("f/:fiction_id/u", func(ctx *gin.Context) {
+		handlers.EditFiction(ctx, store)
+	})
+	api.PUT("f/:fiction_id/:chapter_id/u", func(ctx *gin.Context) {
+		handlers.EditChapter(ctx, store)
+	})
 
-	api.DELETE("/:fiction_id", handlers.DeleteFiction)
-	api.DELETE("/:fiction_id/:chapter_id", handlers.DeleteChapter)
+	// DELETE
+	api.DELETE("f/:fiction_id/d", func(ctx *gin.Context) {
+		handlers.DeleteFiction(ctx, store)
+	})
+	api.DELETE("f/:fiction_id/fav/rmv", func(ctx *gin.Context) {
+		handlers.RemoveFavoriteFiction(ctx, store)
+	})
+	api.DELETE("f/:fiction_id/:chapter_id/d", func(ctx *gin.Context) {
+		handlers.DeleteChapter(ctx, store)
+	})
 
 	router.Run()
 }
