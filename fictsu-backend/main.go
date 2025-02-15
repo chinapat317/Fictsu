@@ -21,8 +21,9 @@ func fictsuAPI(api *gin.RouterGroup) {
 	api.DELETE("/:fiction_id/:chapter_id", handlers.DeleteChapter)
 }
 
-func aiAPI(aiApi *gin.RouterGroup) {
-	aiApi.POST("/text", handlers.OpenAIGetText)
+func openAiAPI(aiApi *gin.RouterGroup) {
+	aiApi.POST("/t", handlers.OpenAIGetText)
+	aiApi.POST("/tti", handlers.OpenAITextToPic)
 }
 
 func main() {
@@ -34,7 +35,7 @@ func main() {
 	api := router.Group("/api")
 	aiApi := router.Group("/ai")
 	fictsuAPI(api)
-	aiAPI(aiApi)
+	openAiAPI(aiApi)
 
 	router.Run()
 }
