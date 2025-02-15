@@ -1,50 +1,19 @@
 package main
 
 import (
-	"os"
 	"log"
-	"github.com/joho/godotenv"
-	"github.com/gin-gonic/gin"
-	"github.com/markbates/goth"
-	"github.com/gorilla/sessions"
-	"github.com/markbates/goth/providers/google"
+	"os"
 
 	db "github.com/Fictsu/Fictsu/database"
 	handlers "github.com/Fictsu/Fictsu/handlers"
+	"github.com/gin-gonic/gin"
+	"github.com/gorilla/sessions"
+	"github.com/joho/godotenv"
+	"github.com/markbates/goth"
+	"github.com/markbates/goth/providers/google"
 )
 
-func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-
-	client_id := os.Getenv("CLIENT_ID")
-	client_secret := os.Getenv("CLIENT_SECRET")
-	client_callback_URL := os.Getenv("CLIENT_CALLBACK_URL")
-    store := sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
-	store.Options = &sessions.Options{
-		HttpOnly: true,
-		Secure:   false,
-		Path:     "/",
-	}
-
-	goth.UseProviders(
-		google.New(
-			client_id,
-			client_secret,
-			client_callback_URL,
-			"email", "profile",
-		),
-	)
-
-	db.Connection()
-	defer db.CloseConnection()
-
-	router := gin.Default()
-
-	api := router.Group("/api")
-
+func fictsuAPI(api *gin.RouterGroup, store *sessions.CookieStore) {
 	// GET
 	api.GET("", handlers.GetAllFictions)
 	api.GET("/user", func(ctx *gin.Context) {
@@ -87,6 +56,46 @@ func main() {
 	api.DELETE("f/:fiction_id/:chapter_id/d", func(ctx *gin.Context) {
 		handlers.DeleteChapter(ctx, store)
 	})
+}
 
+func openAiAPI(aiApi *gin.RouterGroup) {
+	aiApi.POST("/t", handlers.OpenAIGetText)
+	aiApi.POST("/tti", handlers.OpenAITextToPic)
+}
+
+func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	client_id := os.Getenv("CLIENT_ID")
+	client_secret := os.Getenv("CLIENT_SECRET")
+	client_callback_URL := os.Getenv("CLIENT_CALLBACK_URL")
+	store := sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
+	store.Options = &sessions.Options{
+		HttpOnly: true,
+		Secure:   false,
+		Path:     "/",
+	}
+
+	goth.UseProviders(
+		google.New(
+			client_id,
+			client_secret,
+			client_callback_URL,
+			"email", "profile",
+		),
+	)
+
+	db.Connection()
+	defer db.CloseConnection()
+
+	router := gin.Default()
+
+	api := router.Group("/api")
+	aiApi := router.Group("/ai")
+	fictsuAPI(api, store)
+	openAiAPI(aiApi)
 	router.Run()
 }
