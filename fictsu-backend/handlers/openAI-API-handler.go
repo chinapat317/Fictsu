@@ -83,7 +83,7 @@ func OpenAIGetText(ctx *gin.Context) {
 		return
 	}
 
-	ctx.IndentedJSON(http.StatusOK, gin.H{"Message Received": responseBody.Choices[0].Message.Content})
+	ctx.IndentedJSON(http.StatusOK, gin.H{"Received_Message": responseBody.Choices[0].Message.Content})
 }
 
 func OpenAIGetTextToImage(ctx *gin.Context) {

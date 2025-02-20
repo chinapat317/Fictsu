@@ -369,7 +369,7 @@ func GetContributedFictions(user_ID int) ([]models.FictionModel, error) {
 		`
 		SELECT
 			ID, Contributor_ID, Contributor_Name, Cover, Title,
-			Subtitle, Author, Artist, Status, Synopsis, Created,
+			Subtitle, Author, Artist, Status, Synopsis, Created
 		FROM
 			Fictions
 		WHERE
