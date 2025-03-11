@@ -16,6 +16,8 @@ var (
 	OpenAIProjID 		string
 
 	SessionKey			string
+
+	FrontEndURL			string
 )
 
 func LoadEnv() {
@@ -34,8 +36,10 @@ func LoadEnv() {
 
 	SessionKey = os.Getenv("SESSION_KEY")
 
+	FrontEndURL = os.Getenv("FRONT_END_URL")
+
 	// Fail fast if any required environment variable is missing
-	if OpenAIKey == "" || OpenAIOrgID == "" || OpenAIProjID == "" || ClientID == "" || ClientSecret == "" || ClientCallbackURL == "" || SessionKey == "" {
+	if OpenAIKey == "" || OpenAIOrgID == "" || OpenAIProjID == "" || ClientID == "" || ClientSecret == "" || ClientCallbackURL == "" || SessionKey == "" || FrontEndURL == "" {
 		log.Fatal("Missing one or more required environment variables")
 	}
 }
