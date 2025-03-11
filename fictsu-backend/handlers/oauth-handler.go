@@ -7,6 +7,7 @@ import (
 	"github.com/markbates/goth/gothic"
 
 	models "github.com/Fictsu/Fictsu/models"
+	configs "github.com/Fictsu/Fictsu/configs"
 )
 
 func GetOpenAuthorization(ctx *gin.Context) {
@@ -71,12 +72,23 @@ func AuthorizedCallback(ctx *gin.Context, store *sessions.CookieStore) {
 		return
 	}
 
-	ctx.IndentedJSON(http.StatusOK, gin.H{
-		"ID": 			user_in_db.ID,
-		"User_ID": 		user_in_db.User_ID,
-		"Name": 		user_in_db.Name,
-		"Email": 		user_in_db.Email,
-		"Avatar_URL": 	user_in_db.Avatar_URL,
-		"Joined": 		user_in_db.Joined,
-	})
+	ctx.Redirect(http.StatusSeeOther, configs.FrontEndURL)
+}
+
+func Logout(ctx *gin.Context, store *sessions.CookieStore) {
+	session, err := store.Get(ctx.Request, "fictsu-session")
+	if err != nil {
+		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": "Failed to get session"})
+		return
+	}
+
+	// This removes the session immediately
+	session.Options.MaxAge = -1 
+	err = session.Save(ctx.Request, ctx.Writer)
+	if err != nil {
+		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": "Failed to clear session"})
+		return
+	}
+
+	ctx.IndentedJSON(http.StatusOK, gin.H{"Message": "Logged out"})
 }
