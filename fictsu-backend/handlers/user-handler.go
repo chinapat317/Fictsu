@@ -12,43 +12,6 @@ import (
 	models "github.com/Fictsu/Fictsu/models"
 )
 
-func GetAllUsers(ctx *gin.Context) { // For testing
-	rows, err := db.DB.Query(
-		`
-		SELECT
-			ID, User_ID, Name, Email, Avatar_URL, Joined
-		FROM
-			Users
-		`,
-	)
-
-	if err != nil {
-		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": "Failed to fetch users"})
-		return
-	}
-
-	defer rows.Close()
-	users := []models.UserModel{}
-	for rows.Next() {
-		user := models.UserModel{}
-		if err := rows.Scan(
-			&user.ID,
-			&user.User_ID,
-			&user.Name,
-			&user.Email,
-			&user.Avatar_URL,
-			&user.Joined,
-		); err != nil {
-			ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": "Error processing users"})
-			return
-		}
-
-		users = append(users, user)
-	}
-
-	ctx.IndentedJSON(http.StatusOK, users)
-}
-
 func GetUserProfile(ctx *gin.Context, store *sessions.CookieStore) {
 	session, err_sess := store.Get(ctx.Request, "fictsu-session")
 	if err_sess != nil {
@@ -94,14 +57,14 @@ func GetUserProfile(ctx *gin.Context, store *sessions.CookieStore) {
 		return
 	}
 
-	fav_fictions, err_fav := GetFavFictions(ID_to_DB)
-	if err_fav != nil {
+	fav_fictions, err := GetFavFictions(ID_to_DB)
+	if err != nil {
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": "Failed to retrieve favorite fictions"})
 		return
 	}
 
-	contri_fictions, err_contri := GetContributedFictions(ID_to_DB)
-	if err_contri != nil {
+	contri_fictions, err := GetContributedFictions(ID_to_DB)
+	if err != nil {
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": "Failed to retrieve contributed fictions"})
 		return
 	}
