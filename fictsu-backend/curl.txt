@@ -1,10 +1,10 @@
 Fiction:
 
-curl --include --header "Cookie: fictsu-session=" --header "Content-Type: application/json" --request POST --data "{\"cover\": \"This is the Cover image\", \"title\": \"My First Fiction\", \"subtitle\": \"An Exciting Start\", \"author\": \"John Doe\", \"artist\": \"Jane Smith\", \"status\": \"ongoing\", \"synopsis\": \"A thrilling tale of adventure and mystery.\"}" http://localhost:8080/api/f/c
+curl --include --header "Cookie: fictsu-session=" --header "Content-Type: application/json" --request POST --data @test-create-fiction.json http://localhost:8080/api/f/c
 
-curl --include --header "Cookie: fictsu-session=" --header "Content-Type: application/json" --request PUT --data "{\"title\": \"My Second Fiction\"}" http://localhost:8080/api/f/2/u
+curl --include --header "Cookie: fictsu-session=" --header "Content-Type: application/json" --request PUT --data @test-edit-fiction.json http://localhost:8080/api/f/1/u
 
-curl --include --header "Cookie: fictsu-session=" --request DELETE http://localhost:8080/api/f/3/d
+curl --include --header "Cookie: fictsu-session=" --request DELETE http://localhost:8080/api/f/1/d
 
 Favorite Fiction
 
@@ -14,7 +14,7 @@ curl --include --header "Cookie: fictsu-session=" --request DELETE http://localh
 
 Chapter:
 
-curl --include --header "Cookie: fictsu-session=" --header "Content-Type: application/json" --request POST --data "{\"title\": \"Chapter 1\", \"content\": \"This is the first chapter.\"}" http://localhost:8080/api/f/2/u
+curl --include --header "Cookie: fictsu-session=" --header "Content-Type: application/json" --request POST --data @test-create-chapter.json http://localhost:8080/api/f/1/c
 
 curl --include --header "Cookie: fictsu-session=" --header "Content-Type: application/json" --request PUT --data "{\"title\": \"Chapter 2\", \"content\": \"This is the second chapter.\"}" http://localhost:8080/api/f/2/1/u
 
