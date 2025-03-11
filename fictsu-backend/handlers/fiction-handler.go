@@ -402,6 +402,13 @@ func GetContributedFictions(user_ID int) ([]models.FictionModel, error) {
 			return nil, err
 		}
 
+		fiction_ID_str := strconv.Itoa(fiction.ID)
+		chapters, err := GetAllChapters(fiction_ID_str)
+		if err != nil {
+			return nil, err
+		}
+
+		fiction.Chapters = chapters
 		contri_fictions = append(contri_fictions, fiction)
 	}
 
@@ -448,6 +455,13 @@ func GetFavFictions(user_ID int) ([]models.FictionModel, error) {
 			return nil, err
 		}
 
+		fiction_ID_str := strconv.Itoa(fiction.ID)
+		chapters, err := GetAllChapters(fiction_ID_str)
+		if err != nil {
+			return nil, err
+		}
+
+		fiction.Chapters = chapters
 		fav_fictions = append(fav_fictions, fiction)
 	}
 
@@ -483,22 +497,64 @@ func AddFavoriteFiction(ctx *gin.Context, store *sessions.CookieStore) {
 		// Handle PostgreSQL-specific error for duplicate entry
 		if pqErr, ok := err_fav.(*pq.Error); ok {
 			if pqErr.Code == "23505" { // 23505: Unique violation
-				ctx.IndentedJSON(http.StatusConflict, gin.H{"Error": "Fiction is already in your favorites"})
+				ctx.IndentedJSON(http.StatusConflict, gin.H{"is_favorited": true, "Error": "Fiction is already in your favorites"})
 				return
 			}
 		}
 
 		// Handle other database errors
-		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": "Failed to add fiction to favorites"})
+		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"is_favorited": false, "Error": "Failed to add fiction to favorites"})
 		return
 	}
 
-	ctx.IndentedJSON(http.StatusCreated, gin.H{"Message": "Fiction added to favorites"})
+	ctx.IndentedJSON(http.StatusCreated, gin.H{"is_favorited": true, "Message": "Fiction added to favorites"})
+}
+
+func CheckFavoriteFiction(ctx *gin.Context, store *sessions.CookieStore) {
+	session, err_sess := store.Get(ctx.Request, "fictsu-session")
+	if err_sess != nil {
+		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": "Failed to get session"})
+		return
+	}
+
+	ID_from_session := session.Values["ID"]
+	if ID_from_session == nil {
+		ctx.IndentedJSON(http.StatusUnauthorized, gin.H{"Error": "Unauthorized. Please log in first"})
+		return
+	}
+
+	ID_to_DB := ID_from_session.(int)
+	fiction_ID := ctx.Param("fiction_id")
+
+	var is_Favorited bool
+	err_check := db.DB.QueryRow(
+		`
+		SELECT EXISTS (
+			SELECT 
+				1
+			FROM
+				UserFavoriteFiction
+			WHERE
+				User_ID = $1 AND Fiction_ID = $2
+		)
+		`,
+		ID_to_DB,
+		fiction_ID,
+	).Scan(
+		&is_Favorited,
+	)
+
+	if err_check != nil {
+		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": "Failed to check favorite status"})
+		return
+	}
+
+	ctx.IndentedJSON(http.StatusOK, gin.H{"is_favorited": is_Favorited})
 }
 
 func RemoveFavoriteFiction(ctx *gin.Context, store *sessions.CookieStore) {
-	session, err_sess := store.Get(ctx.Request, "fictsu-session")
-	if err_sess != nil {
+	session, err := store.Get(ctx.Request, "fictsu-session")
+	if err != nil {
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": "Failed to get session"})
 		return
 	}
@@ -512,7 +568,7 @@ func RemoveFavoriteFiction(ctx *gin.Context, store *sessions.CookieStore) {
 	ID_to_DB := ID_from_session.(int)
 	fiction_ID := ctx.Param("fiction_id")
 
-	result, err_rmv := db.DB.Exec(
+	result, err := db.DB.Exec(
 		`
 		DELETE FROM
 			UserFavoriteFiction
@@ -523,16 +579,16 @@ func RemoveFavoriteFiction(ctx *gin.Context, store *sessions.CookieStore) {
 		fiction_ID,
 	)
 
-	if err_rmv != nil {
-		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": "Failed to remove fiction from favorites"})
+	if err != nil {
+		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"is_favorited": true, "Error": "Failed to remove fiction from favorites"})
 		return
 	}
 
 	rows_affected, _ := result.RowsAffected()
 	if rows_affected == 0 {
-		ctx.IndentedJSON(http.StatusNotFound, gin.H{"Error": "Fiction not found in your favorites"})
+		ctx.IndentedJSON(http.StatusNotFound, gin.H{"is_favorited": false, "Error": "Fiction not found in your favorites"})
 		return
 	}
 
-	ctx.IndentedJSON(http.StatusOK, gin.H{"Message": "Fiction removed from favorites"})
+	ctx.IndentedJSON(http.StatusOK, gin.H{"is_favorited": false, "Message": "Fiction removed from favorites"})
 }
