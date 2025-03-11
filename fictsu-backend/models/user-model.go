@@ -7,7 +7,7 @@ import (
 type UserModel struct {
 	ID        			int				`json:"id"`
 	User_ID    			string			`json:"user_id"`
-	Super_User 			int				`json:"super_user"`
+	Super_User 			bool			`json:"super_user"`
 	Name      			string			`json:"name"`
 	Email     			string			`json:"email"`
 	Avatar_URL 			string			`json:"avatar_url"`
