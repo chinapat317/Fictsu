@@ -4,51 +4,51 @@ GRANT ALL PRIVILEGES ON DATABASE fictsu TO kwang;
 
 CREATE TABLE Users (
     ID          SERIAL PRIMARY KEY,
-    User_ID     VARCHAR(255),
-    Super_User  INT DEFAULT 0,
-    Name        VARCHAR(255),
-    Email       VARCHAR(255),
+    User_ID     VARCHAR(255) UNIQUE NOT NULL,
+    Super_User  BOOLEAN DEFAULT FALSE,
+    Name        VARCHAR(255) NOT NULL,
+    Email       VARCHAR(255) UNIQUE NOT NULL,
     Avatar_URL  TEXT,
     Joined      DATE DEFAULT CURRENT_DATE
 );
 
 CREATE TABLE Fictions (
     ID                  SERIAL PRIMARY KEY,
-    Contributor_ID      INT REFERENCES Users(ID),
-    Contributor_Name    VARCHAR(255),
-    Cover               VARCHAR(255),
-    Title               VARCHAR(255),
+    Contributor_ID      INT NOT NULL REFERENCES Users(ID),
+    Contributor_Name    VARCHAR(255) NOT NULL,
+    Cover               TEXT,
+    Title               VARCHAR(255) NOT NULL,
     Subtitle            VARCHAR(255),
     Author              VARCHAR(255),
     Artist              VARCHAR(255),
-    Status              VARCHAR(255),
+    Status              VARCHAR(50) CHECK (Status IN ('Ongoing', 'Completed', 'Hiatus')),
     Synopsis            TEXT,
     Created             DATE DEFAULT CURRENT_DATE
 );
 
 CREATE TABLE Genres (
     ID          SERIAL PRIMARY KEY,
-    Genre_Name  VARCHAR(255)
+    Genre_Name  VARCHAR(255) UNIQUE NOT NULL
 );
 
 CREATE TABLE AssignGenreToFiction (
-    Fiction_ID  INT REFERENCES Fictions(ID) ON DELETE CASCADE,
-    Genre_ID    INT REFERENCES Genres(ID) ON DELETE CASCADE,
+    Fiction_ID  INT NOT NULL REFERENCES Fictions(ID) ON DELETE CASCADE,
+    Genre_ID    INT NOT NULL REFERENCES Genres(ID) ON DELETE CASCADE,
     PRIMARY KEY (Fiction_ID, Genre_ID)
 );
 
 CREATE TABLE Chapters (
-    Fiction_ID  INT REFERENCES Fictions(ID) ON DELETE CASCADE,
+    Fiction_ID  INT NOT NULL REFERENCES Fictions(ID) ON DELETE CASCADE,
     ID          INT,
-    Title       VARCHAR(255),
+    Title       VARCHAR(255) NOT NULL,
     Content     TEXT,
     Created     DATE DEFAULT CURRENT_DATE,
     PRIMARY KEY (Fiction_ID, ID)
 );
 
 CREATE TABLE UserFavoriteFiction (
-    User_ID     INT REFERENCES Users(ID) ON DELETE CASCADE,
-    Fiction_ID  INT REFERENCES Fictions(ID) ON DELETE CASCADE,
+    User_ID     INT NOT NULL REFERENCES Users(ID) ON DELETE CASCADE,
+    Fiction_ID  INT NOT NULL REFERENCES Fictions(ID) ON DELETE CASCADE,
     PRIMARY KEY (User_ID, Fiction_ID)
 );
 
@@ -70,11 +70,12 @@ VALUES
     ('Fantasy'),
     ('Romance'),
     ('Horror'),
+    ('Comedy'),
     ('Action');
 
 INSERT INTO AssignGenretoFiction (Fiction_ID, Genre_ID)
 VALUES
-    (1, 1),
+    (1, 5),
     (1, 4);
 
 INSERT INTO Chapters (Fiction_ID, ID, Title, Content)
@@ -82,5 +83,5 @@ VALUES
     (1, 1, 'Chapter 1', 'This is the first chapter.'),
     (1, 2, 'Chapter 2', 'This is the second chapter.');
 
-UPDATE Users SET Super_User = 1 WHERE ID = 1;
-UPDATE Users SET Super_User = 1 WHERE ID = 2;
+UPDATE Users SET Super_User = TRUE WHERE ID = 1;
+UPDATE Users SET Super_User = TRUE WHERE ID = 2;
