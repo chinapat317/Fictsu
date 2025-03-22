@@ -20,7 +20,7 @@ var (
 	FrontEndURL 		string
 
 	CharImagePath 		string
-	BackImagePath  		string
+	BGImagePath  		string
 )
 
 func LoadEnv() {
@@ -41,14 +41,14 @@ func LoadEnv() {
 
 	FrontEndURL 		= os.Getenv("FRONT_END_URL")
 
-	CharImagePath 		= os.Getenv("CHAR_PATH")
-	BackImagePath 		= os.Getenv("ILL_PATH")
+	CharImagePath 		= os.Getenv("CHAR_IMG_PATH")
+	BGImagePath 		= os.Getenv("BG_IMG_PATH")
 
 	// Fail fast if any required environment variable is missing
 	if OpenAIKey == "" || OpenAIOrgID == "" || OpenAIProjID == "" ||
 	ClientID == "" || ClientSecret == "" || ClientCallbackURL == "" ||
 	SessionKey == "" || FrontEndURL == "" || CharImagePath == "" ||
-	BackImagePath == "" {
+	BGImagePath == "" {
 		log.Fatal("Missing one or more required environment variables")
 	}
 }
