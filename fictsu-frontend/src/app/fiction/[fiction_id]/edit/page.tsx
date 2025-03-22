@@ -1,11 +1,13 @@
 "use client"
 
 import useSWR from "swr"
+import Link from "next/link"
 import Image from "next/image"
 import { useForm } from "react-hook-form"
 import { useRouter } from "next/navigation"
-import { FictionForm } from "@/types/types"
 import { use, useState, useEffect } from "react"
+import ChapterActions from "@/components/ChapterActions"
+import { Fiction, FictionForm, Chapter } from "@/types/types"
 
 const fetcher = (url: string) => fetch(url, { credentials: "include" }).then((res) => res.json())
 
@@ -13,11 +15,12 @@ export default function FictionEditPage({ params }: { params: Promise<{ fiction_
     const router = useRouter()
 
     const { fiction_id } = use(params)
+    const fictionIdNumber = Number(fiction_id)
     const [loading, setLoading] = useState(false)
     const [cover, setCover] = useState("/default-cover.png")
     const { register, handleSubmit, reset, formState: { errors } } = useForm<FictionForm>()
     const { data: userData, error: userError } = useSWR(`${process.env.NEXT_PUBLIC_BACKEND_API}/user`, fetcher)
-    const { data: fictionData, error: fictionError, mutate } = useSWR(`${process.env.NEXT_PUBLIC_BACKEND_API}/f/${fiction_id}`, fetcher)
+    const { data: fictionData, error: fictionError, mutate } = useSWR<{ Fiction: Fiction }>(`${process.env.NEXT_PUBLIC_BACKEND_API}/f/${fiction_id}`, fetcher)
 
     useEffect(() => {
         if (userError || fictionError) {
@@ -106,6 +109,22 @@ export default function FictionEditPage({ params }: { params: Promise<{ fiction_
                     {loading ? "Updating..." : "Save Changes"}
                 </button>
             </form>
+
+            {fictionData.Fiction.chapters?.length > 0 && (
+                <div className="mt-6">
+                    <h2 className="text-xl font-semibold">Chapters</h2>
+                    <ul className="mt-2 list-disc list-inside">
+                        {fictionData.Fiction.chapters.map((chapter: Chapter) => (
+                            <li key={chapter.id} className="flex items-center justify-between">
+                                <Link href={`/f/${fiction_id}/${chapter.id}`} className="text-blue-500 hover:underline">
+                                    {chapter.title}
+                                </Link>
+                                <ChapterActions fiction_id={fictionIdNumber} chapter_id={chapter.id} contributor_id={fictionData.Fiction.contributor_id} />
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
         </div>
     )
 }
