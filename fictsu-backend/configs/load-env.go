@@ -1,23 +1,27 @@
 package config
 
 import (
-	"os"
 	"log"
+	"os"
+
 	"github.com/joho/godotenv"
 )
 
 var (
-	ClientID			string
-	ClientSecret		string
-	ClientCallbackURL 	string
+	ClientID          string
+	ClientSecret      string
+	ClientCallbackURL string
 
-	OpenAIKey 			string
-	OpenAIOrgID			string
-	OpenAIProjID 		string
+	OpenAIKey    string
+	OpenAIOrgID  string
+	OpenAIProjID string
 
-	SessionKey			string
+	SessionKey string
 
-	FrontEndURL			string
+	FrontEndURL string
+
+	CharPath string
+	IllPath  string
 )
 
 func LoadEnv() {
@@ -38,8 +42,19 @@ func LoadEnv() {
 
 	FrontEndURL = os.Getenv("FRONT_END_URL")
 
+	CharPath = os.Getenv("CHAR_PATH")
+	IllPath = os.Getenv("ILL_PATH")
+
 	// Fail fast if any required environment variable is missing
-	if OpenAIKey == "" || OpenAIOrgID == "" || OpenAIProjID == "" || ClientID == "" || ClientSecret == "" || ClientCallbackURL == "" || SessionKey == "" || FrontEndURL == "" {
+	if OpenAIKey == "" ||
+		OpenAIOrgID == "" ||
+		OpenAIProjID == "" ||
+		ClientID == "" || ClientSecret == "" ||
+		ClientCallbackURL == "" ||
+		SessionKey == "" ||
+		FrontEndURL == "" ||
+		CharPath == "" ||
+		IllPath == "" {
 		log.Fatal("Missing one or more required environment variables")
 	}
 }

@@ -52,6 +52,15 @@ CREATE TABLE UserFavoriteFiction (
     PRIMARY KEY (User_ID, Fiction_ID)
 );
 
+CREATE TABLE Character(
+    Fiction_ID INT NOT NULL REFERENCES Fictions(ID) ON DELETE CASCADE,
+    ID SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    ref VARCHAR(255) NOT NULL,
+    prompt VARCHAR(255) not NULL,
+    PRIMARY KEY (ID)
+)
+
 INSERT INTO Fictions (Contributor_ID, Contributor_Name, Cover, Title, Subtitle, Author, Artist, Status, Synopsis)
 VALUES (
     1,
