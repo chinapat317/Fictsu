@@ -1,27 +1,24 @@
 package handlers
 
 import (
-	"bytes"
-	"encoding/json"
-	"fmt"
 	"io"
-	"net/http"
 	"os"
+	"fmt"
+	"bytes"
 	"strconv"
-
+	"net/http"
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 
-	configs "github.com/Fictsu/Fictsu/configs"
 	db "github.com/Fictsu/Fictsu/database"
 	models "github.com/Fictsu/Fictsu/models"
+	configs "github.com/Fictsu/Fictsu/configs"
 )
 
-// prompt
 const (
 	INTRO_TEXT string = "Please generate story about: "
 	OUTRO_TEXT string = " Only provide structure of story not whole story."
-	//Generate character pic prompt
-	INTRO_CH string = "Please generate character follow this prompt in T-pose so image can be use as reference for future generation. The prompt is: '"
+	INTRO_CHAR string = "Please generate character follow this prompt in T-pose so image can be use as reference for future generation. The prompt is: '"
 )
 
 func AddHeader(request *http.Request) {
@@ -31,32 +28,36 @@ func AddHeader(request *http.Request) {
 	request.Header.Add("OpenAI-Project", configs.OpenAIProjID)
 }
 
-func OpenAIGenStruc(ctx *gin.Context) {
-	requestBody := models.OpenAIRequestBodyText{}
-	if err_req := ctx.ShouldBindJSON(&requestBody); err_req != nil {
+func OpenAICreateStoryline(ctx *gin.Context) {
+	request_body := models.OpenAIRequestBodyText{}
+	if err := ctx.ShouldBindJSON(&request_body); err != nil {
 		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"Error": "Invalid request body"})
 		return
 	}
 
 	// Prepare OpenAI request payload
-	var prompt_message = INTRO_TEXT + "'" + requestBody.Message + "'" + OUTRO_TEXT
 	URL := "https://api.openai.com/v1/chat/completions"
+	prompt_message := INTRO_TEXT + "'" + request_body.Message + "'" + OUTRO_TEXT
+
 	openAIRequest := map[string]interface{}{
 		"model": "gpt-4o",
 		"messages": []map[string]string{
-			{"role": "user", "content": prompt_message},
+			{
+				"role": "user",
+				"content": prompt_message,
+			},
 		},
 	}
 
 	// Convert request body to JSON
-	JSONBody, err := json.Marshal(openAIRequest)
+	JSON_body, err := json.Marshal(openAIRequest)
 	if err != nil {
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": "Failed to encode request"})
 		return
 	}
 
 	// Create new HTTP request
-	request, err := http.NewRequest("POST", URL, bytes.NewBuffer(JSONBody))
+	request, err := http.NewRequest("POST", URL, bytes.NewBuffer(JSON_body))
 	if err != nil {
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": "Failed to create request"})
 		return
@@ -74,12 +75,6 @@ func OpenAIGenStruc(ctx *gin.Context) {
 
 	defer response.Body.Close()
 
-	if response.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(response.Body)
-		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": fmt.Sprintf("API error: %s", string(body))})
-		return
-	}
-
 	// Read response body
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
@@ -88,46 +83,47 @@ func OpenAIGenStruc(ctx *gin.Context) {
 	}
 
 	// Unmarshal OpenAI response
-	responseBody := models.OpenAIResponseBody{}
-	if err := json.Unmarshal(body, &responseBody); err != nil {
+	response_body := models.OpenAIResponseBody{}
+	if err := json.Unmarshal(body, &response_body); err != nil {
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": "Failed to decode response"})
 		return
 	}
 
 	// Check if the response has choices
-	if len(responseBody.Choices) == 0 {
+	if len(response_body.Choices) == 0 {
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": "No choices returned from OpenAI"})
 		return
 	}
 
-	ctx.IndentedJSON(http.StatusOK, gin.H{"Received_Message": responseBody.Choices[0].Message.Content})
+	ctx.IndentedJSON(http.StatusOK, gin.H{"Received_Message": response_body.Choices[0].Message.Content})
 }
 
-func OpenAICreateChar(ctx *gin.Context) {
-	requestBody := models.OpenAIRequestBodyTextToImage{}
-	if err := ctx.ShouldBindJSON(&requestBody); err != nil {
+func OpenAICreateCharacter(ctx *gin.Context) {
+	request_body := models.OpenAIRequestBodyTextToImage{}
+	if err := ctx.ShouldBindJSON(&request_body); err != nil {
 		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"Error": "Invalid request body"})
 		return
 	}
 
 	URL := "https://api.openai.com/v1/images/generations"
-	var prompt_message = INTRO_CH + "'" + requestBody.Message + "'"
+	prompt_message := INTRO_CHAR + "'" + request_body.Message + "'"
+
 	openAIRequest := map[string]interface{}{
 		"model":  "dall-e-3",
 		"prompt": prompt_message,
 		"n":      1,
-		"size":   requestBody.Size,
+		"size":   request_body.Size,
 	}
 
 	// Convert request body to JSON
-	JSONBody, err := json.Marshal(openAIRequest)
+	JSON_body, err := json.Marshal(openAIRequest)
 	if err != nil {
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": "Failed to encode request"})
 		return
 	}
 
 	// Create new HTTP request
-	request, err := http.NewRequest("POST", URL, bytes.NewBuffer(JSONBody))
+	request, err := http.NewRequest("POST", URL, bytes.NewBuffer(JSON_body))
 	if err != nil {
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": "Failed to create request"})
 		return
@@ -144,52 +140,66 @@ func OpenAICreateChar(ctx *gin.Context) {
 
 	defer response.Body.Close()
 
-	body, err_res_body := io.ReadAll(response.Body)
-	if err_res_body != nil {
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": "Failed to read response"})
 		return
 	}
-	fmt.Println("Response Body: ", string(body))
 
-	responseBody := models.DalleImageResponse{}
-	if err_unmar := json.Unmarshal(body, &responseBody); err_unmar != nil {
+	response_body := models.DalleImageResponse{}
+	if err := json.Unmarshal(body, &response_body); err != nil {
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": "Failed to decode response"})
 		return
 	}
 
 	// Check if the response has Data
-	if len(responseBody.Data) == 0 {
+	if len(response_body.Data) == 0 {
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": "No choices returned from OpenAI"})
 		return
 	}
+
 	var count int
-	db.DB.QueryRow("SELECT COUNT(*) FROM Character;").Scan(&count)
-	imageURL := responseBody.Data[0].URL
-	filePath := configs.CharPath + strconv.Itoa(count+1) + ".png"
-	err = downloadImage(imageURL, filePath)
+	db.DB.QueryRow(
+		`
+		SELECT
+			COUNT(*)
+		FROM]
+			Character
+		`,
+	).Scan(&count)
+
+	image_URL := response_body.Data[0].URL
+	file_path := configs.CharImagePath + strconv.Itoa(count+1) + ".png"
+	err = DownloadImage(image_URL, file_path)
 	if err != nil {
 		fmt.Println("Error saving image:", err)
 		return
 	}
-	fmt.Println("Image saved successfully to", filePath)
+
+	fmt.Println("Image saved successfully to", file_path)
 }
 
-func downloadImage(url, filePath string) error {
+func DownloadImage(url, file_path string) error {
 	// Send GET request
-	resp, err := http.Get(url)
+	response, err := http.Get(url)
 	if err != nil {
+		fmt.Println("Error getting response: ", err)
 		return err
 	}
-	defer resp.Body.Close()
 
-	// Create the file
-	out, err := os.Create(filePath)
+	defer response.Body.Close()
+
+	// Create a file
+	file, err := os.Create(file_path)
 	if err != nil {
+		fmt.Println("Error creating file: ", err)
 		return err
 	}
-	defer out.Close()
+
+	defer file.Close()
 
 	// Copy the image data to the file
-	_, err = io.Copy(out, resp.Body)
+	_, err = io.Copy(file, response.Body)
+	fmt.Println("Error copying file: ", err)
 	return err
 }

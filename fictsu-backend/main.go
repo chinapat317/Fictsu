@@ -100,8 +100,8 @@ func main() {
 
 	// OpenAI
 	AI := API.Group("/ai")
-	AI.POST("/create/struc", handlers.OpenAIGenStruc)
-	AI.POST("/create/char", handlers.OpenAICreateChar)
+	AI.POST("/storyline/c", handlers.OpenAICreateStoryline)
+	AI.POST("/char/c", handlers.OpenAICreateCharacter)
 
 	router.Run()
 }
