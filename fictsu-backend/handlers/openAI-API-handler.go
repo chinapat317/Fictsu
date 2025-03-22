@@ -36,15 +36,15 @@ func OpenAIGetText(ctx *gin.Context) {
 	}
 
 	// Convert request body to JSON
-	JSONBody, err_mar := json.Marshal(openAIRequest)
-	if err_mar != nil {
+	JSONBody, err := json.Marshal(openAIRequest)
+	if err != nil {
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": "Failed to encode request"})
 		return
 	}
 
 	// Create new HTTP request
-	request, err_new_req := http.NewRequest("POST", URL, bytes.NewBuffer(JSONBody))
-	if err_new_req != nil {
+	request, err := http.NewRequest("POST", URL, bytes.NewBuffer(JSONBody))
+	if err != nil {
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": "Failed to create request"})
 		return
 	}
@@ -53,26 +53,30 @@ func OpenAIGetText(ctx *gin.Context) {
 
 	// Send request to OpenAI
 	client := &http.Client{}
-	response, err_res := client.Do(request)
-	if err_res != nil {
+	response, err := client.Do(request)
+	if err != nil {
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": "Failed to send request"})
 		return
 	}
 
 	defer response.Body.Close()
 
+	if response.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(response.Body)
+		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": fmt.Sprintf("API error: %s", string(body))})
+		return
+	}
+
 	// Read response body
-	body, err_res_body := io.ReadAll(response.Body)
-	if err_res_body != nil {
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": "Failed to read response"})
 		return
 	}
 
-	fmt.Println("Response Body: ", string(body))
-
 	// Unmarshal OpenAI response
 	responseBody := models.OpenAIResponseBody{}
-	if err_unmar := json.Unmarshal(body, &responseBody); err_unmar != nil {
+	if err := json.Unmarshal(body, &responseBody); err != nil {
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"Error": "Failed to decode response"})
 		return
 	}
@@ -126,6 +130,12 @@ func OpenAIGetTextToImage(ctx *gin.Context) {
 	}
 
 	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(response.Body)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"Error": fmt.Sprintf("API error: %s", string(body))})
+		return
+	}
 
 	// Read response body
 	body, err := io.ReadAll(response.Body)
