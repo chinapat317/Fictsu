@@ -12,6 +12,7 @@ export default function FavoriteButton({ fiction_id }: { fiction_id: number }) {
                 const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API}/f/${fiction_id}/fav/status`, {
                     credentials: "include",
                 })
+
                 if (res.status === 401) {
                     console.warn("User not logged in, skipping favorite status check.")
                     return
@@ -43,8 +44,10 @@ export default function FavoriteButton({ fiction_id }: { fiction_id: number }) {
                 method,
                 credentials: "include",
             })
+
             if (res.status === 401) {
                 alert("You need to log in to favorite a fiction.")
+                setLoading(false)
                 return
             }
     
@@ -63,8 +66,8 @@ export default function FavoriteButton({ fiction_id }: { fiction_id: number }) {
 
     return (
         <button
-            onClick={toggleFavorite}
             disabled={loading}
+            onClick={toggleFavorite}
             className="p-2 text-red-500 hover:text-red-700"
             aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
         >

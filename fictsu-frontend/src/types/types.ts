@@ -38,3 +38,6 @@ export interface Chapter {
     content:    string
     created:    string
 }
+
+export type FictionForm = Omit<Fiction, "id" | "contributor_id" | "contributor_name" | "created" | "genres" | "chapters">
+export type ChapterForm = Omit<Chapter, "fiction_id" | "id" | "created">

@@ -22,17 +22,17 @@ export default async function HomePage() {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {fictions.map((fiction) => (
           <Link
-          key={fiction.id}
-          href={`/fiction/${fiction.id}`}
-          className="block border rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition"
+            key={fiction.id}
+            href={`/f/${fiction.id}`}
+            className="block border rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition"
           >
             <div className="relative w-full h-56">
               <Image
-              src={fiction.cover}
-              alt={fiction.title}
-              layout="fill"
-              objectFit="cover"
-              className="rounded-t-lg"
+                src={fiction.cover || "/default-cover.png"}
+                alt={fiction.title}
+                layout="fill"
+                objectFit="cover"
+                className="rounded-t-lg"
               />
             </div>
             <div className="p-4">

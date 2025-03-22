@@ -6,6 +6,7 @@ async function getChapter(fiction_id: string, chapter_id: string): Promise<Chapt
     const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API}/f/${fiction_id}/${chapter_id}`, {
         cache: "no-store",
     })
+
     if (!res.ok) {
         return null
     }

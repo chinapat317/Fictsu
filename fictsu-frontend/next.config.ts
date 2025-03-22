@@ -12,6 +12,18 @@ const nextConfig: NextConfig = {
         source: "/f/:fiction_id/:chapter_id",
         destination: "/fiction/:fiction_id/:chapter_id",
       },
+      {
+        source: "/f/create",
+        destination: "/fiction/create",
+      },
+      {
+        source: "/f/edit",
+        destination: "/fiction/edit",
+      },
+      {
+        source: "/f/:fiction_id/:chapter_id/edit",
+        destination: "/fiction/:fiction_id/:chapter_id/edit",
+      },
     ];
   },
 
