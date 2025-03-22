@@ -7,7 +7,6 @@ import (
 	"github.com/markbates/goth/gothic"
 
 	models "github.com/Fictsu/Fictsu/models"
-	configs "github.com/Fictsu/Fictsu/configs"
 )
 
 func GetOpenAuthorization(ctx *gin.Context) {
@@ -72,7 +71,24 @@ func AuthorizedCallback(ctx *gin.Context, store *sessions.CookieStore) {
 		return
 	}
 
-	ctx.Redirect(http.StatusSeeOther, configs.FrontEndURL)
+	HTML_response := `
+		<!DOCTYPE html>
+		<html lang="en">
+		<head>
+			<meta charset="UTF-8">
+			<meta name="viewport" content="width=device-width, initial-scale=1.0">
+			<title>Logging in...</title>
+			<script>
+				window.opener.postMessage("login-success", "*");
+				window.close();
+			</script>
+		</head>
+		<body>
+			<p>Logging in... If this window does not close, please close it manually.</p>
+		</body>
+		</html>
+	`
+	ctx.Data(http.StatusOK, "text/html; charset=utf-8", []byte(HTML_response))
 }
 
 func Logout(ctx *gin.Context, store *sessions.CookieStore) {
