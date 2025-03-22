@@ -163,8 +163,8 @@ func OpenAICreateCharacter(ctx *gin.Context) {
 		`
 		SELECT
 			COUNT(*)
-		FROM]
-			Character
+		FROM
+			CharacterImage
 		`,
 	).Scan(&count)
 
