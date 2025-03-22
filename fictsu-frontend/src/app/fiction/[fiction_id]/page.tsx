@@ -3,7 +3,6 @@ import Image from "next/image"
 import { Fiction } from "@/types/types"
 import { notFound } from "next/navigation"
 import FavoriteButton from "@/components/FavoriteButton"
-import ChapterActions from "@/components/ChapterActions"
 
 async function getFiction(fiction_id: string): Promise<Fiction | null> {
     const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API}/f/${fiction_id}`, {
@@ -66,7 +65,6 @@ export default async function FictionPage({ params }: { params: { fiction_id: st
                                 <Link href={`/f/${fiction.id}/${chapter.id}`} className="text-blue-500 hover:underline">
                                     {chapter.title}
                                 </Link>
-                                <ChapterActions fiction_id={fiction.id} chapter_id={chapter.id} contributor_id={fiction.contributor_id} />
                             </li>
                         ))}
                     </ul>
