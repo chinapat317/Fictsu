@@ -19,3 +19,9 @@ curl --include --header "Cookie: fictsu-session=" --header "Content-Type: applic
 curl --include --header "Cookie: fictsu-session=" --header "Content-Type: application/json" --request PUT --data "{\"title\": \"Chapter 2\", \"content\": \"This is the second chapter.\"}" http://localhost:8080/api/f/2/1/u
 
 curl --include --header "Cookie: fictsu-session=" --request DELETE http://localhost:8080/api/f/2/1/d
+
+AI:
+
+curl --include --header "Content-Type: application/json" --request POST --data "{\"message\": \"3 piglets fight with crocodile.\"}" http://localhost:8080/api/ai/storyline/c
+
+curl --include --header "Content-Type: application/json" --request POST --data "{\"message\": \"Draw a chubby man with white skin, gray hair and dark blue eyes in cartoon art style.\", \"size\": \"1024x1024\"}" http://localhost:8080/api/ai/char/c
