@@ -2,14 +2,15 @@ package main
 
 import (
 	"time"
-	"github.com/gin-gonic/gin"
-	"github.com/markbates/goth"
+
 	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 	"github.com/gorilla/sessions"
+	"github.com/markbates/goth"
 	"github.com/markbates/goth/providers/google"
 
-	db 	"github.com/Fictsu/Fictsu/database"
 	configs "github.com/Fictsu/Fictsu/configs"
+	db "github.com/Fictsu/Fictsu/database"
 	handlers "github.com/Fictsu/Fictsu/handlers"
 )
 
@@ -38,12 +39,12 @@ func main() {
 	router := gin.Default()
 
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     	[]string{"http://localhost:3000"},
-		AllowMethods:     	[]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:     	[]string{"Origin", "Authorization", "Content-Type"},
-		ExposeHeaders:    	[]string{"Content-Length"},
-		AllowCredentials: 	true,
-		MaxAge: 			12 * time.Hour,
+		AllowOrigins:     []string{"http://localhost:3000"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Authorization", "Content-Type"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
 	}))
 
 	API := router.Group("/api")
@@ -99,10 +100,8 @@ func main() {
 
 	// OpenAI
 	AI := API.Group("/ai")
-
-	// POST
-	AI.POST("/t", handlers.OpenAIGetText)
-	AI.POST("/tti", handlers.OpenAIGetTextToImage)
+	AI.POST("/create/struc", handlers.OpenAIGenStruc)
+	AI.POST("/create/char", handlers.OpenAICreateChar)
 
 	router.Run()
 }
