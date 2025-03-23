@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form"
 import { useRouter } from "next/navigation"
 import { use, useState, useEffect } from "react"
 import ChapterActions from "@/components/ChapterActions"
-import { Fiction, FictionForm, Chapter } from "@/types/types"
+import { Fiction, FictionForm, Chapter, ChapterForm } from "@/types/types"
 
 const fetcher = (url: string) => fetch(url, { credentials: "include" }).then((res) => res.json())
 
@@ -15,9 +15,11 @@ export default function FictionEditPage({ params }: { params: Promise<{ fiction_
     const router = useRouter()
 
     const { fiction_id } = use(params)
+    const chapterForm = useForm<ChapterForm>()
     const fictionIdNumber = Number(fiction_id)
     const [loading, setLoading] = useState(false)
     const [cover, setCover] = useState("/default-cover.png")
+    const [showChapterForm, setShowChapterForm] = useState(false)
     const { register, handleSubmit, reset, formState: { errors } } = useForm<FictionForm>()
     const { data: userData, error: userError } = useSWR(`${process.env.NEXT_PUBLIC_BACKEND_API}/user`, fetcher)
     const { data: fictionData, error: fictionError, mutate } = useSWR<{ Fiction: Fiction }>(`${process.env.NEXT_PUBLIC_BACKEND_API}/f/${fiction_id}`, fetcher)
@@ -69,6 +71,31 @@ export default function FictionEditPage({ params }: { params: Promise<{ fiction_
         alert("Fiction updated successfully!")
         mutate()
         router.push(`/f/${fiction_id}`)
+    }
+
+    const onSubmitChapter = async (data: ChapterForm) => {
+        setLoading(true)
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API}/f/${fiction_id}/c`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify(data),
+            })
+
+            if (!response.ok) {
+                alert("Failed to create chapter.")
+                return
+            }
+
+            alert("Chapter created successfully!")
+            setShowChapterForm(false)
+            mutate()
+        } catch (error) {
+            console.error("Error submitting chapter form", error)
+        } finally {
+            setLoading(false)
+        }
     }
 
     if (!fictionData || !userData) {
@@ -124,6 +151,18 @@ export default function FictionEditPage({ params }: { params: Promise<{ fiction_
                         ))}
                     </ul>
                 </div>
+            )}
+            <button onClick={() => setShowChapterForm(!showChapterForm)} className="mt-4 w-full bg-green-500 text-white py-2 rounded">
+                {showChapterForm ? "Cancel" : "Add Chapter"}
+            </button>
+            {showChapterForm && (
+                <form onSubmit={chapterForm.handleSubmit(onSubmitChapter)} className="space-y-4 mt-4 border p-4 rounded">
+                    <input {...chapterForm.register("title", { required: true })} placeholder="Chapter Title *Required" className="w-full p-2 border rounded" />
+                    {chapterForm.formState.errors.title && <span className="text-red-500">Title is required</span>}
+                    <textarea {...chapterForm.register("content", { required: true })} placeholder="Chapter Content *Required" className="w-full p-2 border rounded" />
+                    {chapterForm.formState.errors.content && <span className="text-red-500">Content is required</span>}
+                    <button type="submit" className="w-full bg-green-500 text-white py-2 rounded" disabled={loading}>{loading ? "Creating Chapter..." : "Create Chapter"}</button>
+                </form>
             )}
         </div>
     )
