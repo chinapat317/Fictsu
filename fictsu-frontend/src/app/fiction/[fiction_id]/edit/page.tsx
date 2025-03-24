@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form"
 import { useRouter } from "next/navigation"
 import { use, useState, useEffect } from "react"
 import ChapterActions from "@/components/ChapterActions"
+import FloatingToolsMenu from "@/components/FloatingToolsMenu"
 import { Fiction, FictionForm, Chapter, ChapterForm } from "@/types/types"
 
 const fetcher = (url: string) => fetch(url, { credentials: "include" }).then((res) => res.json())
@@ -164,6 +165,7 @@ export default function FictionEditPage({ params }: { params: Promise<{ fiction_
                     <button type="submit" className="w-full bg-green-500 text-white py-2 rounded" disabled={loading}>{loading ? "Creating Chapter..." : "Create Chapter"}</button>
                 </form>
             )}
+            <FloatingToolsMenu />
         </div>
     )
 }
