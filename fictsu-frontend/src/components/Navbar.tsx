@@ -23,7 +23,7 @@ export default function Navbar() {
                 setUser(data.User_Profile)
             }
         })
-        .catch((error) => console.error("Failed to fetch user:", error))
+        .catch((error) => console.error("Failed to fetch user: ", error))
     }, [])
 
     useEffect(() => {

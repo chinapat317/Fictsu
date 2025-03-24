@@ -1,10 +1,8 @@
-"use client"
-
 import useSWR from "swr"
 import { useState } from "react"
 import { User } from "@/types/types"
 
-const fetcher = (url: string) => fetch(url, { credentials: "include" }).then(res => res.json())
+const fetcher = (URL: string) => fetch(URL, { credentials: "include" }).then(res => res.json())
 
 export default function ChapterActions({ fiction_id, chapter_id, contributor_id }: {
     fiction_id: number,
@@ -14,6 +12,7 @@ export default function ChapterActions({ fiction_id, chapter_id, contributor_id 
     const [loading, setLoading] = useState(false)
 
     const { data } = useSWR(`${process.env.NEXT_PUBLIC_BACKEND_API}/user`, fetcher)
+
     const user: User | null = data?.User_Profile || null
 
     if (!user || user.id !== contributor_id) {

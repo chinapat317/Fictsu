@@ -54,11 +54,11 @@ export default function FavoriteButton({ fiction_id }: { fiction_id: number }) {
             if (!res.ok) {
                 throw new Error(`Failed to ${isFavorited ? "remove" : "add"} favorite`)
             }
-            
+
             const data = await res.json()
             setIsFavorited(data.is_favorited)
         } catch (error) {
-            console.error("Error toggling favorite:", error)
+            console.error("Error toggling favorite: ", error)
         } finally {
             setLoading(false)
         }
