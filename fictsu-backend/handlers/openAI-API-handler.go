@@ -37,7 +37,7 @@ func OpenAICreateStoryline(ctx *gin.Context) {
 
 	// Prepare OpenAI request payload
 	URL := "https://api.openai.com/v1/chat/completions"
-	prompt_message := INTRO_TEXT + "'" + request_body.Message + "'" + OUTRO_TEXT
+	prompt_message := fmt.Sprintf("%s '%s' %s", INTRO_TEXT, request_body.Message, OUTRO_TEXT)
 
 	openAIRequest := map[string]interface{}{
 		"model": "gpt-4o",
