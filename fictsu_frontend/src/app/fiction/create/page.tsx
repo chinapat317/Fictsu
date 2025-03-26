@@ -1,9 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { useState } from "react"
-import { useForm } from "react-hook-form"
-import { useRouter } from "next/navigation"
+import React, { useState, FormEvent } from "react"
 
 var previewURL = "/images/fictsu_logo.png"
 
@@ -15,6 +13,14 @@ function ChangePreviewPic(e: React.ChangeEvent<HTMLInputElement>){
     }
 }
 
+function DataHandler(data: any, DATA_TAG: any){
+    
+    const formData = new FormData()
+    for(var i; i=0; i< DATA_TAG.length){
+        formData.append(DATA_TAG[i], data[i])
+    }
+    return formData
+}
 
 export default function CreateFictionPage() {
     const [cover, setCover] = useState<File | null>(null)
@@ -24,10 +30,24 @@ export default function CreateFictionPage() {
     const [synopsis, setSypnosis] = useState<string>('')
     const [author, setAuthor] = useState<string>('')
     const [artist, setArtist] = useState<string>('')
+
+    const formHandler = async (e: FormEvent<HTMLFormElement>) => {
+        e.preventDefault()
+        const ficCreateAPI = process.env.BACKEND_API + "/api/f/c"
+        const DATA_TAG = ["cover", "title", "subtitle", "status", "synopsis", "author", "artist"]
+        var data = [cover, title, subtitle, status, synopsis, author, artist]
+        const formData = DataHandler(data, DATA_TAG)
+        const res = await fetch(ficCreateAPI, {
+            method: "POST",
+            body: formData,
+        })
+        var result = await res.json()
+        console.log("response from backend: ", result)
+    }
     return (
         <div className="max-w-4xl mx-auto p-6">
             <h1 className="text-3xl font-bold mb-4">Create Fiction</h1>
-            <form onSubmit={() => {}} className="space-y-4">
+            <form onSubmit={ formHandler } className="space-y-4">
                 <div className="flex gap-6">
                 <Image
                         src={previewURL}
@@ -48,18 +68,17 @@ export default function CreateFictionPage() {
                             <option value="Hiatus">Hiatus</option>
                             <option value="Dropped">Dropped</option>
                         </select>
-                        <button className="w-full bg-green-500 text-white py-2 rounded">
                         <input type="file"
                         accept="image/png, image/jpeg"
+                        className="w-full bg-green-500 text-white py-2 rounded"
                         onChange={(e) => {
                             ChangePreviewPic(e)
                             setCover(e.target.files?.[0] || null)
                         }}
                         />
-                        </button>
                     </div>
                 </div>
-                <textarea value={synopsis} placeholder="Synopsis" className="w-full p-2 border rounded" required/>
+                <textarea value={synopsis} onChange={(e) => setSypnosis(e.target.value)} placeholder="Synopsis" className="w-full p-2 border rounded" required/>
                 <button type="submit" className="w-full bg-blue-500 text-white py-2 rounded">
                 </button>
             </form>
