@@ -1,5 +1,7 @@
 "use client"
 import Link from "next/link"
+import Login from "./auth/login"
+
 
 export default function NavBar(){
     return(
@@ -13,11 +15,9 @@ export default function NavBar(){
                     className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
                     Post your work +
                 </button>
-                <button
-                        onClick={() => {}}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                        Login
-                </button>
+                
+                <Login/>
+                
             </div>
     </nav>
     )
