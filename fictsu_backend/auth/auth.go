@@ -1,10 +1,8 @@
 package auth
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"net/mail"
 
 	env "fictsu_backend/config"
@@ -18,14 +16,8 @@ type TokenRequest struct {
 }
 
 func VerifyTokenHandler(ctx *gin.Context) string {
-	body, _ := io.ReadAll(ctx.Request.Body)
-	ctx.Request.Body = io.NopCloser(bytes.NewBuffer(body))
-	var req TokenRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		fmt.Println(err.Error())
-		return "Invalid request"
-	}
-	payload, err := idtoken.Validate(context.Background(), req.IDToken, env.GoogleClientID)
+	idToken := ctx.PostForm("id_token")
+	payload, err := idtoken.Validate(context.Background(), idToken, env.GoogleClientID)
 	if err != nil {
 		fmt.Println(err.Error())
 		return "Invalid request"

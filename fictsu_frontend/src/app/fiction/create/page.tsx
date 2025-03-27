@@ -3,6 +3,7 @@
 import Image from "next/image"
 import React, { useState, FormEvent } from "react"
 import Authenticate from '@/components/auth/authen'
+import { getSession } from "next-auth/react"
 
 var previewURL = "/images/fictsu_logo.png"
 
@@ -14,11 +15,13 @@ function ChangePreviewPic(e: React.ChangeEvent<HTMLInputElement>){
     }
 }
 
-function DataHandler(data: any, DATA_TAG: any){
+function DataHandler(data: any, DATA_TAG: any, id_token: any){
     const formData = new FormData()
-    for(var i; i=0; i< DATA_TAG.length){
+    console.log(DATA_TAG.length)
+    for(let i=0; i< DATA_TAG.length; i++){
         formData.append(DATA_TAG[i], data[i])
     }
+    formData.append("id_token", id_token)
     return formData
 }
 
@@ -34,10 +37,13 @@ export default function CreateFictionPage() {
 
     const formHandler = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault()
-        const ficCreateAPI = process.env.BACKEND_API + "/api/f/c"
+        const session = await getSession()
+        const id_token = session?.id_token
+        console.log("File to upload:", cover)
+        const ficCreateAPI = process.env.NEXT_PUBLIC_BACKEND_API + "api/f/c"
         const DATA_TAG = ["cover", "title", "subtitle", "status", "synopsis", "author", "artist"]
         var data = [cover, title, subtitle, status, synopsis, author, artist]
-        const formData = DataHandler(data, DATA_TAG)
+        const formData = DataHandler(data, DATA_TAG, id_token)
         const res = await fetch(ficCreateAPI, {
             method: "POST",
             body: formData,

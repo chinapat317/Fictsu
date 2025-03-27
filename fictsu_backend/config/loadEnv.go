@@ -14,6 +14,8 @@ var (
 	DbUser         string
 	DbPw           string
 	DbName         string
+	CoverPath      string
+	BucketName     string
 )
 
 func LoadEnv() {
@@ -28,4 +30,6 @@ func LoadEnv() {
 	DbUser = os.Getenv("DB_USER")
 	DbPw = os.Getenv("DB_PW")
 	DbName = os.Getenv("DB_NAME")
+	CoverPath = os.Getenv("COVER_PATH")
+	BucketName = os.Getenv("BUCKET_NAME")
 }

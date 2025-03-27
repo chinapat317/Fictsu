@@ -1,10 +1,8 @@
 package main
 
 import (
-	"time"
-
-	"fictsu_backend/config"
 	"fictsu_backend/handlers"
+	"time"
 
 	env "fictsu_backend/config"
 
@@ -28,7 +26,8 @@ func CreateRoute() {
 
 func main() {
 	env.LoadEnv()
-	config.ConnectDatabase()
+	env.ConnectDatabase()
+	env.InitFirebaseApp()
 	CreateRoute()
 	api := router.Group("/api")
 	api.POST("/f/c", handlers.CreateFiction)
