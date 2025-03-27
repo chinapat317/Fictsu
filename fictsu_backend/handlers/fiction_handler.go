@@ -12,7 +12,5 @@ func CreateFiction(ctx *gin.Context) {
 	if !auth.IsValidEmail(is_verify) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": is_verify})
 		return
-	} else {
-		ctx.JSON(http.StatusOK, gin.H{"email": is_verify})
 	}
 }

@@ -1,24 +1,16 @@
 services:
-
-  fictsu-database:
+  postgres:
     image: postgres:latest
-    container_name: fictsu-postgres
-    hostname: db
-    networks:
-      - mynet
-    ports:
-      - 5432:5432
+    container_name: postgres-db
     environment:
+      POSTGRES_USER: jo
+      POSTGRES_PASSWORD: john
       POSTGRES_DB: fictsu
-      POSTGRES_USER: Jo
-      POSTGRES_PASSWORD: admin
+    ports:
+      - "5432:5432"
     volumes:
-      - fictsu-database:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
 volumes:
-  fictsu-database:
-    name: fictsu-postgres
-
-networks:
-  mynet:
-    driver: bridge
+  pgdata:

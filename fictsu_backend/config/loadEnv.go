@@ -9,6 +9,11 @@ import (
 
 var (
 	GoogleClientID string
+	DbHost         string
+	DbPort         string
+	DbUser         string
+	DbPw           string
+	DbName         string
 )
 
 func LoadEnv() {
@@ -18,8 +23,9 @@ func LoadEnv() {
 	}
 
 	GoogleClientID = os.Getenv("GOOGLE_CLIENT_ID")
-
-	if GoogleClientID == "" {
-		log.Fatal("Missing one or more required environment variables")
-	}
+	DbHost = os.Getenv("DB_HOST")
+	DbPort = os.Getenv("DB_PORT")
+	DbUser = os.Getenv("DB_USER")
+	DbPw = os.Getenv("DB_PW")
+	DbName = os.Getenv("DB_NAME")
 }

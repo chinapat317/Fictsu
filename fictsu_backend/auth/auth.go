@@ -3,6 +3,7 @@ package auth
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"net/mail"
 
@@ -21,10 +22,12 @@ func VerifyTokenHandler(ctx *gin.Context) string {
 	ctx.Request.Body = io.NopCloser(bytes.NewBuffer(body))
 	var req TokenRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
+		fmt.Println(err.Error())
 		return "Invalid request"
 	}
 	payload, err := idtoken.Validate(context.Background(), req.IDToken, env.GoogleClientID)
 	if err != nil {
+		fmt.Println(err.Error())
 		return "Invalid request"
 	}
 	var email string = payload.Claims["email"].(string)

@@ -2,6 +2,7 @@
 
 import Image from "next/image"
 import React, { useState, FormEvent } from "react"
+import Authenticate from '@/components/auth/authen'
 
 var previewURL = "/images/fictsu_logo.png"
 
@@ -14,7 +15,6 @@ function ChangePreviewPic(e: React.ChangeEvent<HTMLInputElement>){
 }
 
 function DataHandler(data: any, DATA_TAG: any){
-    
     const formData = new FormData()
     for(var i; i=0; i< DATA_TAG.length){
         formData.append(DATA_TAG[i], data[i])
@@ -23,6 +23,7 @@ function DataHandler(data: any, DATA_TAG: any){
 }
 
 export default function CreateFictionPage() {
+    const { loading, authenticated } = Authenticate();
     const [cover, setCover] = useState<File | null>(null)
     const [title, setTitle] = useState<string>('')
     const [subtitle, setSubtitle] = useState<string>('')
@@ -44,6 +45,11 @@ export default function CreateFictionPage() {
         var result = await res.json()
         console.log("response from backend: ", result)
     }
+
+    if (loading || !authenticated) {
+        return <div>Loading...</div>; // Or a spinner
+    }
+    
     return (
         <div className="max-w-4xl mx-auto p-6">
             <h1 className="text-3xl font-bold mb-4">Create Fiction</h1>
